@@ -49,6 +49,17 @@ fireFlares = (
     pygame.Rect(430,390,40,40),
 )
 
+boundries = (
+    pygame.Rect(0, 0, 50, 20),
+    pygame.Rect(120, 0, width-120, 20),
+    pygame.Rect(0, 0, 20, height),
+    pygame.Rect(0, height-20, width, 20),
+    pygame.Rect(width-20, 0, 20, 410),
+    pygame.Rect(width-20, 500, 20, 200)
+)
+
+victimRect = pygame.Rect(420,250,50,50)
+
 grid = np.zeros((height,width))
 
 grid[:30,:] = 1
