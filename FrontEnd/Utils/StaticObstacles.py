@@ -43,6 +43,12 @@ obstacles = (
     pygame.Rect(615,290,20,120),
 )
 
+fireFlares = (
+    pygame.Rect(305,70,40,40),
+    pygame.Rect(600,240,40,40),
+    pygame.Rect(430,390,40,40),
+)
+
 grid = np.zeros((height,width))
 
 grid[:30,:] = 1
@@ -59,3 +65,13 @@ for obstacle in obstacles:
     width = obstacle.width
 
     grid[x:x+width,y:y+height] = 1
+
+for fire in fireFlares:
+
+    x = fire.left
+    y = fire.top
+
+    height = fire.height
+    width = fire.width
+
+    grid[x:x+width, y:y+height] = 2
