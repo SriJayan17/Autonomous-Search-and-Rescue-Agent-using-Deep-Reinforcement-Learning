@@ -1,4 +1,4 @@
-from ..Memory import Memory
+from .Memory import Memory
 import torch
 import torch.nn as nn
 import torch.autograd as autograd

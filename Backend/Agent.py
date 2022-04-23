@@ -1,4 +1,5 @@
 from .Brains.DQN_brain import DQNBrain
+import pygame
 
 class Agent:
     """This class represents the agent itself
@@ -7,6 +8,7 @@ class Agent:
     def __init__(self,num_inputs,num_actions,brain_type='DQN'):
         self.nb_inputs = num_inputs
         self.nb_actions = num_actions
+        
         #Storage capacity of the brain of the agent:
         if brain_type.upper() == 'DQN':
             #Discount factor for calculating future actions:

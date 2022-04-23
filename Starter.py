@@ -1,7 +1,8 @@
 import pygame
-from Utils.StaticObstacles import borders,boundries,obstacles,fireFlares,victimRect
-import random
-# from Backend.Agent import Agent
+from FrontEnd.Utils.StaticObstacles import borders,boundries,obstacles,fireFlares,victimRect
+from Backend.Agent import Agent
+
+agent = Agent(3,3,'DQN')
 
 # Environment Dimensions
 width = 700
@@ -26,8 +27,8 @@ fire = pygame.transform.scale(fire,(40,40))
 victims = pygame.image.load("Resources/Images/victims.png")
 victims = pygame.transform.scale(victims,(50,50))
 
-agent = pygame.image.load("Resources/Images/agent.png")
-agent = pygame.transform.scale(agent,(33,33))
+agent_icon = pygame.image.load("Resources/Images/agent.png")
+agent_icon = pygame.transform.scale(agent_icon,(33,33))
 
 # Control variable
 running = True  
@@ -92,7 +93,7 @@ def generateReward(currentState,action):
     
     nextState = predictNextState(currentState,action)
 
-    agentRect = agent.get_rect(topleft = (nextState[0],nextState[1]))
+    agentRect = agent_icon.get_rect(topleft = (nextState[0],nextState[1]))
 
     # Stop if agent reaches Destination
     if agentRect.colliderect(victimRect):
@@ -137,8 +138,8 @@ while running:
     for obstacle in obstacles:
         pygame.draw.rect(environment,(255, 0, 0), obstacle)
     
-    # action = Agent.take_action(reward,state)
-    action = random.randint(0,2)
+    action = agent.take_action(reward,state)
+    # action = random.randint(0,2)
     reward,nextState = generateReward(state,action)
 
     if reward == 100:
@@ -146,7 +147,7 @@ while running:
 
     # Blits the agent into environment based on currentState
     state = nextState
-    rotatedAgent = pygame.transform.rotate(agent,state[2])
+    rotatedAgent = pygame.transform.rotate(agent_icon,state[2])
     environment.blit(rotatedAgent,(state[0],state[1]))
 
     # Actively listen for event performed
@@ -162,21 +163,22 @@ while running:
             if event.key == pygame.K_UP:
                 reward,nextState = generateReward(state,0)
                 state = nextState
-                rotatedAgent = pygame.transform.rotate(agent,state[2])
+                rotatedAgent = pygame.transform.rotate(agent_icon,state[2])
                 environment.blit(rotatedAgent,(state[0],state[1]))
 
             if event.key == pygame.K_LEFT:
                 reward,nextState = generateReward(state,1)
                 state = nextState
-                rotatedAgent = pygame.transform.rotate(agent,state[2])
+                rotatedAgent = pygame.transform.rotate(agent_icon,state[2])
                 environment.blit(rotatedAgent,(state[0],state[1]))
 
             if event.key == pygame.K_RIGHT:
                 reward,nextState = generateReward(state,2)
                 state = nextState
-                rotatedAgent = pygame.transform.rotate(agent,state[2])
+                rotatedAgent = pygame.transform.rotate(agent_icon,state[2])
                 environment.blit(rotatedAgent,(state[0],state[1]))
 
     # To make simulation smooth                 
     pygame.time.delay(50)
     pygame.display.flip() 
+0
