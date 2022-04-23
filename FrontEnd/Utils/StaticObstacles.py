@@ -1,10 +1,12 @@
+from cProfile import label
 import numpy as np
 import pygame
 
-pygame.init()
-info = pygame.display.Info()
 width = 700
 height = 700
+
+row = 710
+cols = 710
 
 obstacles = (
     pygame.Rect(50,0,20,70),
@@ -65,14 +67,14 @@ boundries = (
     pygame.Rect(width-20, 500, 20, 200)
 )
 
-victimRect = pygame.Rect(420,250,50,50)
+victimsRect = pygame.Rect(420,250,50,50)
 
-grid = np.zeros((height,width))
+grid = np.zeros((row,cols))
 
 grid[:30,:] = 1
-grid[height-30:,:] = 1
-grid[30:height-30,:30] = 1
-grid[30:height-30,width-30:] = 1
+grid[row-30:,:] = 1
+grid[30:row-30,:30] = 1
+grid[30:row-30,cols-30:] = 1
 
 for obstacle in obstacles:
 
