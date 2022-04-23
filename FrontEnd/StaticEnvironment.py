@@ -1,5 +1,5 @@
 import pygame
-from Utils.StaticObstacles import obstacles,fireFlares,boundries,victimRect
+from Utils.StaticObstacles import borders,boundries,obstacles,fireFlares,victimRect
 import random
 # from Backend.Agent import Agent
 
@@ -105,8 +105,8 @@ def generateReward(currentState,action):
             return -0.5,currentState
     
     # Negative reward if agent hits the Boundries
-    for boundry in boundries:
-        if agentRect.colliderect(boundry):
+    for border in borders:
+        if agentRect.colliderect(border):
             return -0.5,currentState
 
     # Higher Negative reward if agent will hit fire flares

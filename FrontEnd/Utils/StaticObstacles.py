@@ -49,6 +49,13 @@ fireFlares = (
     pygame.Rect(430,390,40,40),
 )
 
+borders = (
+    pygame.Rect(0,0,20,height-20),
+    pygame.Rect(0,height-20,width-20,20),
+    pygame.Rect(20,0,width-20,20),
+    pygame.Rect(width-20,0,20,height),
+)
+
 boundries = (
     pygame.Rect(0, 0, 50, 20),
     pygame.Rect(120, 0, width-120, 20),
