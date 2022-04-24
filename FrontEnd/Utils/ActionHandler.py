@@ -5,7 +5,7 @@ class ActionHandler:
 
     # Parameters
     theta = 90
-    step = 5
+    step = 10
     proportionalityConstant = 990
 
     def __init__(self, grid, obstacles, fireFlares, borders, victims):
@@ -138,14 +138,16 @@ class ActionHandler:
             angle = 0
             if state[2] + ActionHandler.theta < 360:
                 angle = state[2] + ActionHandler.theta
-
             nextState[2] = angle
+            nextState = list(self.predictNextState(agent,tuple(nextState),0))
 
         elif action == 2:
             angle = 0
             if state[2] - ActionHandler.theta > -360:
                 angle = state[2] - ActionHandler.theta
             nextState[2] = angle
+            nextState = list(self.predictNextState(agent,tuple(nextState),0))
+            
         
         frontDensity,leftDensity,rightDensity = self.calculateObstacleDenstity(agent, nextState)
         frontIntensity, leftIntensity, rightIntensity = self.calculateHeatIntensity(agent, nextState)
@@ -195,10 +197,10 @@ class ActionHandler:
 
         # Negative reward if agent moves away from destination (victims)
         if currDist <= updatedDist:
-            return -0.05,nextState
+            return -1.5,nextState
 
         # Positive Reward if agent approaches near to victims
         if currDist > updatedDist:
-            return 0.1,nextState        
+            return 1.0,nextState        
         
-        return 0.1,nextState
+        # return 0.1,nextState

@@ -1,11 +1,11 @@
 import pygame
 from FrontEnd.Utils.StaticObstacles import grid,borders,boundries,obstacles,fireFlares,victimsRect
 from FrontEnd.Utils.ActionHandler import ActionHandler
-# from Backend.Agent import Agent
+from Backend.Agent import Agent
 import random
 
 # Initialising objects
-# agent = Agent(3,3,'DQN')
+agent = Agent(7,3,'DQN')
 actionHandler = ActionHandler(grid, obstacles, fireFlares, borders, victimsRect)
 
 # Environment Dimensions
@@ -62,10 +62,10 @@ while running:
     for obstacle in obstacles:
         pygame.draw.rect(environment,(255, 0, 0), obstacle)
     
-    # action = agent.take_action(reward,state)
-    action = random.randint(0,2)
+    action = agent.take_action(reward,state)
+    # action = random.randint(0,2)
     reward,nextState = actionHandler.generateReward(dynamicAgent,state,action)
-    print(reward,nextState)
+    # print(reward,nextState)
 
     if reward == 1:
         running = False
@@ -76,6 +76,7 @@ while running:
     environment.blit(dynamicAgent,(state[0],state[1]))
 
     # Actively listen for event performed
+    print('Running...')
     for event in pygame.event.get():  
 
         if event.type == pygame.QUIT:  

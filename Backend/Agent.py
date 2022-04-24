@@ -25,6 +25,7 @@ class Agent:
         Returns:
             Action (int): The discreet action to be taken by the agent. Return values :[0,1,2...n actions]
         """
+        current_state = current_state[2:]
         return self.brain.update(prev_reward,current_state)
             
         

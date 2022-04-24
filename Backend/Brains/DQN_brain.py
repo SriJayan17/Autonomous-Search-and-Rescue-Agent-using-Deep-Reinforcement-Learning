@@ -15,13 +15,14 @@ class Network(nn.Module):
         self.nb_inputs = nb_inputs
         self.nb_outputs = nb_actions
         self.first_connection = nn.Linear(self.nb_inputs,30)
-        self.second_connection = nn.Linear(30,40)
-        self.third_connection = nn.Linear(40,self.nb_outputs)
+        self.second_connection = nn.Linear(30,self.nb_outputs)
+        # self.second_connection = nn.Linear(30,40)
+        # self.third_connection = nn.Linear(40,self.nb_outputs)
         
     def forward(self,state):
         fc1_activated = functional.relu(self.first_connection(state))
-        fc2_activated = functional.relu(self.second_connection(fc1_activated))
-        q_values = self.third_connection(fc2_activated)
+        # fc2_activated = functional.relu(self.second_connection(fc1_activated))
+        q_values = self.second_connection(fc1_activated)
         return q_values
 
 class DQNBrain():
@@ -32,7 +33,7 @@ class DQNBrain():
         self.reward_mean = []
         self.memory = Memory(100000)
         self.model = Network(input_nodes,nb_actions)
-        self.optimizer = optim.Adam(self.model.parameters(),lr=0.01)
+        self.optimizer = optim.Adam(self.model.parameters(),lr=0.1)
         self.last_state = torch.Tensor(input_nodes).unsqueeze(0)
         self.last_reward = 0
         self.last_action = 0
