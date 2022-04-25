@@ -1,5 +1,5 @@
 import pygame
-from FrontEnd.Utils.StaticObstacles import grid,borders,boundries,obstacles,fireFlares,victimsRect
+from FrontEnd.Utils.StaticObstacles import grid,borders,boundaries,obstacles,fireFlares,victimsRect
 from FrontEnd.Utils.ActionHandler import ActionHandler
 from Backend.Agent import Agent
 import random
@@ -47,8 +47,8 @@ while running:
     # Set background color as white
     environment.fill((0,0,0))
     # Fill the borders
-    for boundry in boundries:
-        pygame.draw.rect(environment, (255, 0, 0), boundry)
+    for boundary in boundaries:
+        pygame.draw.rect(environment, (255, 0, 0), boundary)
 
     # Load the fire flares into environment 
     environment.blit(fire,(305,70))
@@ -67,7 +67,7 @@ while running:
     reward,nextState = actionHandler.generateReward(dynamicAgent,state,action)
     # print(reward,nextState)
 
-    if reward == 1:
+    if reward == 2:
         running = False
 
     # Blits the agent into environment based on currentState
@@ -76,7 +76,6 @@ while running:
     environment.blit(dynamicAgent,(state[0],state[1]))
 
     # Actively listen for event performed
-    print('Running...')
     for event in pygame.event.get():  
 
         if event.type == pygame.QUIT:  
@@ -85,7 +84,7 @@ while running:
             running = False  
             
         if event.type == pygame.KEYDOWN:
-
+            
             if event.key == pygame.K_UP:
                 reward,nextState = actionHandler.generateReward(dynamicAgent,state,0)
                 print(reward,nextState)

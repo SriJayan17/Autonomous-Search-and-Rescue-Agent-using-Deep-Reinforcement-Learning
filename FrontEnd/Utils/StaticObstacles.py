@@ -1,4 +1,3 @@
-from cProfile import label
 import numpy as np
 import pygame
 
@@ -58,7 +57,7 @@ borders = (
     pygame.Rect(width-20,0,20,height),
 )
 
-boundries = (
+boundaries = (
     pygame.Rect(0, 0, 50, 20),
     pygame.Rect(120, 0, width-120, 20),
     pygame.Rect(0, 0, 20, height),

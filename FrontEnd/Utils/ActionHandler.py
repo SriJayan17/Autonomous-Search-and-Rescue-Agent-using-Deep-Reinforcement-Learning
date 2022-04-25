@@ -178,7 +178,7 @@ class ActionHandler:
         # Stop if agent reaches Destination
         if agentRect.colliderect(self.victims):
             print("Reached Destination")
-            return 1,nextState
+            return 2,nextState
 
         # Negative reward if agent hits the Boundries
         for border in self.borders:
@@ -197,10 +197,12 @@ class ActionHandler:
 
         # Negative reward if agent moves away from destination (victims)
         if currDist <= updatedDist:
-            return -1.5,nextState
+            return -0.3,nextState
+        
+        if currDist == updatedDist:
+            return -0.5,nextState
 
         # Positive Reward if agent approaches near to victims
         if currDist > updatedDist:
-            return 1.0,nextState        
+            return 1,nextState        
         
-        # return 0.1,nextState
