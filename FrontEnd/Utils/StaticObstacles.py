@@ -1,4 +1,3 @@
-from cProfile import label
 import numpy as np
 import pygame
 
@@ -9,7 +8,7 @@ row = 710
 cols = 710
 
 obstacles = (
-    pygame.Rect(50,0,20,70),
+    # pygame.Rect(50,0,20,70),
     pygame.Rect(20,290,70,20),
     pygame.Rect(20,350,70,20),
     pygame.Rect(20,500,120,20),
@@ -58,7 +57,7 @@ borders = (
     pygame.Rect(width-20,0,20,height),
 )
 
-boundries = (
+boundaries = (
     pygame.Rect(0, 0, 50, 20),
     pygame.Rect(120, 0, width-120, 20),
     pygame.Rect(0, 0, 20, height),
