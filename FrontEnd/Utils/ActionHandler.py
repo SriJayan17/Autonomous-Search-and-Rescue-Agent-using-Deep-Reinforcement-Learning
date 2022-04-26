@@ -6,8 +6,7 @@ class ActionHandler:
     # Parameters
     theta = 90
     step = 10
-    proportionalityConstant = 100
-
+    proportionalityConstant = 990
 
     def __init__(self, grid, obstacles, fireFlares, borders, victims):
 
@@ -17,7 +16,6 @@ class ActionHandler:
         self.victims = victims
         self.victimsCenter = victims.center
         self.grid = grid
-        self.previousActions = [1,1,1]
 
     # Calculate eucledian distance between two points
     def calculateDistance(self, a, b):
@@ -167,12 +165,6 @@ class ActionHandler:
     # Reward generation based on action performed
     def generateReward(self, agent, currentState, action):
         
-        if len(self.previousActions) >=3:
-            del self.previousActions[0]
-            self.previousActions.append(action)
-            if self.previousActions.count(action) == 3:
-                return -1,currentState
-
         currentAgentRect = agent.get_rect(topleft = (currentState[0],currentState[1]))
         currentAgentCenter = currentAgentRect.center
         currDist = self.calculateDistance(self.victimsCenter, currentAgentCenter)
@@ -186,9 +178,9 @@ class ActionHandler:
         # Stop if agent reaches Destination
         if agentRect.colliderect(self.victims):
             print("Reached Destination")
-            return 2,nextState
+            return 1,nextState
 
-        # Negative reward if agent hits the Boundaries
+        # Negative reward if agent hits the Boundries
         for border in self.borders:
             if agentRect.colliderect(border):
                 return -0.8,currentState
@@ -205,9 +197,10 @@ class ActionHandler:
 
         # Negative reward if agent moves away from destination (victims)
         if currDist <= updatedDist:
-            return -0.1,nextState
+            return -1.5,nextState
 
         # Positive Reward if agent approaches near to victims
         if currDist > updatedDist:
-            return 0.2,nextState        
+            return 1.0,nextState        
         
+        # return 0.1,nextState
