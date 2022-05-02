@@ -47,21 +47,26 @@ class DynamicEnvironment:
 
         # Dynamic rendnering
         count = 0
-        index = 2
+        index = 0
         grid = computeGrid(dynamicObstacles[index], dynamicFireFlares[index])
         rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index])
 
         while running:
 
-            # count+=1
-            # if count > 2500:
-            #     index = 1
-            #     grid = computeGrid(dynamicObstacles[index], dynamicFireFlares[index])
-            #     rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index])
-            # elif count > 5000:
-            #     count = 0
-            #     index = 0
-            #     rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index])
+            count+=1
+            if count > 2500 and count <= 5000:
+                index = 1
+                grid = computeGrid(dynamicObstacles[index], dynamicFireFlares[index])
+                rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index])
+            elif count > 5000 and count <= 10000:
+                index = 2
+                grid = computeGrid(dynamicObstacles[index], dynamicFireFlares[index])
+                rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index])
+            elif count > 10000:
+                count = 0
+                index = 0
+                grid = computeGrid(dynamicObstacles[index], dynamicFireFlares[index])
+                rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index])
 
             # Set background color as white
             environment.fill((0,0,0))
@@ -81,11 +86,11 @@ class DynamicEnvironment:
             for obstacle in dynamicObstacles[index]:
                 pygame.draw.rect(environment,(255, 0, 0), obstacle)
             
-            # action = agent.take_action(reward,state)
-            # reward,nextState = rewardHandler.generateReward(dynamicAgent,state,action)
+            action = agent.take_action(reward,state)
+            reward,nextState = rewardHandler.generateReward(dynamicAgent,state,action)
 
             # Blits the agent into environment based on currentState
-            # state = nextState
+            state = nextState
             dynamicAgent = pygame.transform.rotate(agentIcon,state[2])
             environment.blit(dynamicAgent,(state[0],state[1]))
 
