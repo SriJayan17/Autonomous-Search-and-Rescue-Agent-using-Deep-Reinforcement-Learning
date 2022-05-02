@@ -2,6 +2,7 @@ from Project.FrontEnd.Utils.StateHandler import StateHandler
 
 class RewardHandler:
 
+    previousActions = [1,1,1]
     def __init__(self, grid, obstacles, fireFlares, borders, victims):
 
         self.obstacles = obstacles
@@ -9,18 +10,16 @@ class RewardHandler:
         self.borders = borders
         self.victims = victims
         self.victimsCenter = victims.center
-        self.grid = grid
-        self.previousActions = [1,1,1]
         self.stateHandler = StateHandler(grid, fireFlares, victims)
 
     # Reward generation based on action performed
     def generateReward(self, agent, currentState, action):
         
         # Restrict the agent from performing contiinuous turn actions
-        if len(self.previousActions) >=3:
-            self.previousActions.pop(0)
-            self.previousActions.append(action)
-            if self.previousActions.count(action) == 3 and action in [1,2]:
+        if len(RewardHandler.previousActions) >=3:
+            RewardHandler.previousActions.pop(0)
+            RewardHandler.previousActions.append(action)
+            if RewardHandler.previousActions.count(action) == 3 and action in [1,2]:
                 return -1,currentState
 
         # Calculating Agents's distance from destination
@@ -54,7 +53,7 @@ class RewardHandler:
         # Higher Negative reward if agent approaches to fire flares
         for fire in self.fireFlares:
             if agentRect.colliderect(fire):
-                return -1.25,nextState
+                return -1.5,nextState
 
         # Negative reward if agent moves away from destination (victims)
         if currDist <= updatedDist:

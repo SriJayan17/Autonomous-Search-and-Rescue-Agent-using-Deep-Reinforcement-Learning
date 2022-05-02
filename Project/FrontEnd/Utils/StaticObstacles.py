@@ -8,7 +8,6 @@ row = 710
 cols = 710
 
 obstacles = (
-    # pygame.Rect(50,0,20,70),
     pygame.Rect(20,290,70,20),
     pygame.Rect(20,350,70,20),
     pygame.Rect(20,500,120,20),
