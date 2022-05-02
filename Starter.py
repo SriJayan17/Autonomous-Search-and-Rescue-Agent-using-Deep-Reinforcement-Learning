@@ -1,12 +1,11 @@
 import pygame
-from FrontEnd.Utils.StaticObstacles import grid,borders,boundaries,obstacles,fireFlares,victimsRect
-from FrontEnd.Utils.ActionHandler import ActionHandler
 from Backend.Agent import Agent
-import random
+from FrontEnd.Utils.StaticObstacles import grid,borders,boundaries,obstacles,fireFlares,victimsRect
+from FrontEnd.Utils.RewardHandler import RewardHandler
 
 # Initialising objects
-agent = Agent(7,3,'DQN')
-actionHandler = ActionHandler(grid, obstacles, fireFlares, borders, victimsRect)
+agent = Agent(8,3,'DQN')
+rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders, victimsRect)
 
 # Environment Dimensions
 width = 700
@@ -37,7 +36,7 @@ running = True
 agentX = 90
 agentY = 620
 dynamicAgent = agent_icon
-state = (agentX, agentY, 0, 0, 0, 0, 0, 0, 0)
+state = (agentX, agentY, 0, 0, 0, 0, 0, 0, 0, 0)
 
 # Initial Reward
 reward = 0
@@ -63,9 +62,7 @@ while running:
         pygame.draw.rect(environment,(255, 0, 0), obstacle)
     
     action = agent.take_action(reward,state)
-    # action = random.randint(0,2)
-    reward,nextState = actionHandler.generateReward(dynamicAgent,state,action)
-    # print(reward,nextState)
+    reward,nextState = rewardHandler.generateReward(dynamicAgent,state,action)
 
     # Blits the agent into environment based on currentState
     state = nextState
@@ -87,21 +84,21 @@ while running:
         if event.type == pygame.KEYDOWN:
             
             if event.key == pygame.K_UP:
-                reward,nextState = actionHandler.generateReward(dynamicAgent,state,0)
+                reward,nextState = rewardHandler.generateReward(dynamicAgent,state,0)
                 print(reward,nextState)
                 state = nextState
                 dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
                 environment.blit(dynamicAgent,(state[0],state[1]))
 
             if event.key == pygame.K_LEFT:
-                reward,nextState = actionHandler.generateReward(dynamicAgent,state,1)
+                reward,nextState = rewardHandler.generateReward(dynamicAgent,state,1)
                 print(reward,nextState)
                 state = nextState
                 dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
                 environment.blit(dynamicAgent,(state[0],state[1]))
 
             if event.key == pygame.K_RIGHT:
-                reward,nextState = actionHandler.generateReward(dynamicAgent,state,2)
+                reward,nextState = rewardHandler.generateReward(dynamicAgent,state,2)
                 print(reward,nextState)
                 state = nextState
                 dynamicAgent = pygame.transform.rotate(agent_icon,state[2])

@@ -1,23 +1,18 @@
 import math
 import numpy as np
 
-class ActionHandler:
+class StateHandler:
 
     # Parameters
     theta = 90
     step = 10
     proportionalityConstant = 100
 
-
-    def __init__(self, grid, obstacles, fireFlares, borders, victims):
-
-        self.obstacles = obstacles
-        self.fireFlares = fireFlares
-        self.borders = borders
-        self.victims = victims
-        self.victimsCenter = victims.center
+    def __init__(self, grid, fireFlares, victims):
         self.grid = grid
-        self.previousActions = [1,1,1]
+        self.victimsCenter = victims.center
+        self.fireFlares = fireFlares
+        
 
     # Calculate eucledian distance between two points
     def calculateDistance(self, a, b):
@@ -64,10 +59,31 @@ class ActionHandler:
 
         return frontDensity,leftDensity,rightDensity
 
+    # Calculate angle between agent and victims vectors
+    def calculateAngle(self, agent,state):
+
+        agentRect = agent.get_rect(topleft=(state[0],state[1]))
+        vectorA = np.array([self.victimsCenter[0] - agentRect.center[0], self.victimsCenter[1] - agentRect.center[1]])
+
+        if state[2] in [0,360]:
+            frontMid = ((agentRect.topleft[0]+agentRect.topright[0])/2,(agentRect.topleft[1]+agentRect.topright[1])/2)
+        elif state[2] in [90,-270]:
+            frontMid = ((agentRect.topleft[0]+agentRect.bottomleft[0])/2,(agentRect.topleft[1]+agentRect.bottomleft[1])/2)
+        elif state[2] in [180,-180]:
+            frontMid = ((agentRect.bottomleft[0]+agentRect.bottomright[0])/2,(agentRect.bottomleft[1]+agentRect.bottomright[1])/2)
+        elif state[2] in [270,-90]:
+            frontMid = ((agentRect.topright[0]+agentRect.bottomright[0])/2,(agentRect.topright[1]+agentRect.bottomright[1])/2)
+
+        vectorB = np.array([frontMid[0]-agentRect.center[0],frontMid[1]-agentRect.center[1]])
+
+        angle = math.degrees(np.arccos((np.dot(vectorB,vectorA))/(math.sqrt(vectorA[0]**2 + vectorA[1]**2)*math.sqrt(vectorB[0]**2 + vectorB[1]**2))))
+
+        return angle
+
     # Caculate heat intesity from the heat source
     def calculateHeatIntensity(self, agent, state):
         
-        findIntensity = lambda d : ActionHandler.proportionalityConstant if d==0 else ActionHandler.proportionalityConstant / math.pow(d,2)
+        findIntensity = lambda d : StateHandler.proportionalityConstant if d==0 else StateHandler.proportionalityConstant / math.pow(d,2)
 
         agentRect = agent.get_rect(topleft = (state[0], state[1]))
 
@@ -111,48 +127,49 @@ class ActionHandler:
 
         if action == 0:
             if state[2] > 0 and state[2] < 90:
-                nextState[1] = state[1] - ActionHandler.step
+                nextState[1] = state[1] - StateHandler.step
             elif state[2] >= 90 and state[2] < 180:
-                nextState[0] = state[0] - ActionHandler.step
+                nextState[0] = state[0] - StateHandler.step
 
             elif state[2] >= 180 and state[2] < 270:
-                nextState[1] = state[1] + ActionHandler.step
+                nextState[1] = state[1] + StateHandler.step
             
             elif state[2] >= 270 and state[2] < 360:
-                nextState[0] = state[0] + ActionHandler.step
+                nextState[0] = state[0] + StateHandler.step
 
             elif state[2] < 0 and state[2] >= -90:
-                nextState[0] = state[0] + ActionHandler.step
+                nextState[0] = state[0] + StateHandler.step
 
             elif state[2] < -90 and state[2] >= -180:
-                nextState[1] = state[1] + ActionHandler.step
+                nextState[1] = state[1] + StateHandler.step
 
             elif state[2] < -180 and state[2] >= -270:
-                nextState[0] = state[0] - ActionHandler.step
+                nextState[0] = state[0] - StateHandler.step
             
             elif state[2] < -270 and state[2] >= -360:
-                nextState[1] = state[1] - ActionHandler.step
+                nextState[1] = state[1] - StateHandler.step
             
             else:
-                nextState[1] = state[1] - ActionHandler.step
+                nextState[1] = state[1] - StateHandler.step
 
         elif action == 1:
             angle = 0
-            if state[2] + ActionHandler.theta < 360:
-                angle = state[2] + ActionHandler.theta
+            if state[2] + StateHandler.theta < 360:
+                angle = state[2] + StateHandler.theta
             nextState[2] = angle
             nextState = list(self.predictNextState(agent,tuple(nextState),0))
 
         elif action == 2:
             angle = 0
-            if state[2] - ActionHandler.theta > -360:
-                angle = state[2] - ActionHandler.theta
+            if state[2] - StateHandler.theta > -360:
+                angle = state[2] - StateHandler.theta
             nextState[2] = angle
             nextState = list(self.predictNextState(agent,tuple(nextState),0))
             
         
-        frontDensity,leftDensity,rightDensity = self.calculateObstacleDenstity(agent, nextState)
-        frontIntensity, leftIntensity, rightIntensity = self.calculateHeatIntensity(agent, nextState)
+        frontDensity,leftDensity,rightDensity = self.calculateObstacleDenstity(agent, tuple(nextState))
+        frontIntensity, leftIntensity, rightIntensity = self.calculateHeatIntensity(agent, tuple(nextState))
+        destinationAngle = self.calculateAngle(agent, tuple(nextState))
 
         if tuple(nextState) != state:
             nextState[3] = frontDensity
@@ -161,53 +178,6 @@ class ActionHandler:
             nextState[6] = frontIntensity
             nextState[7] = leftIntensity
             nextState[8] = rightIntensity
+            nextState[9] = destinationAngle
 
         return tuple(nextState)
-
-    # Reward generation based on action performed
-    def generateReward(self, agent, currentState, action):
-        
-        if len(self.previousActions) >=3:
-            del self.previousActions[0]
-            self.previousActions.append(action)
-            if self.previousActions.count(action) == 3:
-                return -1,currentState
-
-        currentAgentRect = agent.get_rect(topleft = (currentState[0],currentState[1]))
-        currentAgentCenter = currentAgentRect.center
-        currDist = self.calculateDistance(self.victimsCenter, currentAgentCenter)
-
-        nextState = self.predictNextState(agent, currentState, action)
-
-        agentRect = agent.get_rect(topleft = (nextState[0],nextState[1]))
-        agentCenter = agentRect.center
-        updatedDist = self.calculateDistance(self.victimsCenter, agentCenter)
-        
-        # Stop if agent reaches Destination
-        if agentRect.colliderect(self.victims):
-            print("Reached Destination")
-            return 2,nextState
-
-        # Negative reward if agent hits the Boundaries
-        for border in self.borders:
-            if agentRect.colliderect(border):
-                return -0.8,currentState
-
-        # Negative reward if agent hits the obstacles
-        for obstacle in self.obstacles:
-            if agentRect.colliderect(obstacle):
-                return -0.8,currentState
-        
-        # Higher Negative reward if agent approaches to fire flares
-        for fire in self.fireFlares:
-            if agentRect.colliderect(fire):
-                return -1,nextState
-
-        # Negative reward if agent moves away from destination (victims)
-        if currDist <= updatedDist:
-            return -0.1,nextState
-
-        # Positive Reward if agent approaches near to victims
-        if currDist > updatedDist:
-            return 0.2,nextState        
-        
