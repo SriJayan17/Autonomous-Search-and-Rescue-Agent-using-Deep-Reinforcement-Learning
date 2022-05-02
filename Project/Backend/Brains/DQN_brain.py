@@ -33,7 +33,7 @@ class DQNBrain():
         self.reward_mean = []
         self.memory = Memory(100000)
         self.model = Network(input_nodes,nb_actions)
-        self.optimizer = optim.Adam(self.model.parameters(),lr=0.07)
+        self.optimizer = optim.Adam(self.model.parameters(),lr=0.08)
         self.last_state = torch.Tensor(input_nodes).unsqueeze(0)
         self.last_reward = 0
         self.last_action = 0

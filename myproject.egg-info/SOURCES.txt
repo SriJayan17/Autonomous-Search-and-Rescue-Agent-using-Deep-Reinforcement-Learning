@@ -1,0 +1,17 @@
+setup.py
+Project/__init__.py
+Project/Backend/Agent.py
+Project/Backend/__init__.py
+Project/Backend/Brains/DQN_brain.py
+Project/Backend/Brains/Memory.py
+Project/Backend/Brains/__init__.py
+Project/FrontEnd/Starter.py
+Project/FrontEnd/__init__.py
+Project/FrontEnd/Utils/RewardHandler.py
+Project/FrontEnd/Utils/StateHandler.py
+Project/FrontEnd/Utils/StaticObstacles.py
+Project/FrontEnd/Utils/__init__.py
+myproject.egg-info/PKG-INFO
+myproject.egg-info/SOURCES.txt
+myproject.egg-info/dependency_links.txt
+myproject.egg-info/top_level.txt

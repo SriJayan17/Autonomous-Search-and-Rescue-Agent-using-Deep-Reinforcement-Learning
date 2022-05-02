@@ -1,5 +1,4 @@
-from .StateHandler import StateHandler
-
+from Project.FrontEnd.Utils.StateHandler import StateHandler
 
 class RewardHandler:
 
