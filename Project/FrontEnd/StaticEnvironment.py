@@ -8,7 +8,7 @@ class StaticEnvironment:
     def __init__(self):
 
         # Initialising objects
-        agent = Agent(8,3,'DQN')
+        agent = Agent(9,3,'DQN')
         rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders, victimsRect)
 
         # Environment Dimensions
@@ -110,5 +110,5 @@ class StaticEnvironment:
                         environment.blit(dynamicAgent,(state[0],state[1]))
 
             # To make simulation smooth                 
-            # pygame.time.delay(5)
+            pygame.time.delay(5)
             pygame.display.flip()

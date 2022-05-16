@@ -34,20 +34,20 @@ class StateHandler:
             left = self.grid[topLeft[0]-30:topLeft[0], topLeft[1]:topLeft[1]+30]
             right = self.grid[topRight[0]:topRight[0]+30, topRight[1]:topRight[1]+30]
 
-        elif state[2] in [90, -270]:
+        elif state[2] == 90:
             
             front = self.grid[bottomLeft[0]-30:bottomLeft[0], topLeft[1]:topLeft[1]+30]
             left = self.grid[bottomLeft[0]:bottomLeft[0]+30, bottomLeft[1]:bottomLeft[1]+30]
             right = self.grid[topLeft[0]:topLeft[0]+30, topLeft[1]-30:topLeft[1]]
 
-        elif state[2] in [180, -180]:
+        elif state[2] == 180:
             
             front = self.grid[bottomLeft[0]:bottomLeft[0]+30, bottomLeft[1]:bottomLeft[1]+30]
             left = self.grid[bottomRight[0]:bottomRight[0]+30, bottomRight[1]-30:bottomRight[1]]
             right = self.grid[bottomLeft[0]-30:bottomLeft[0], bottomLeft[1]-30:bottomLeft[1]]
 
 
-        elif state[2] in [270, -90]:
+        elif state[2] == 270:
 
             front = self.grid[topRight[0]:topRight[0]+30, topLeft[1]:topLeft[1]+30]
             left = self.grid[topRight[0]-30:topRight[0], topRight[1]-30:topRight[1]]
@@ -77,7 +77,7 @@ class StateHandler:
         vectorB = np.array([frontMid[0]-agentRect.center[0],frontMid[1]-agentRect.center[1]])
 
         angle = math.degrees(np.arccos((np.dot(vectorB,vectorA))/(math.sqrt(vectorA[0]**2 + vectorA[1]**2)*math.sqrt(vectorB[0]**2 + vectorB[1]**2))))
-
+        # print(f' The angle is {angle}')
         return angle
 
     # Caculate heat intesity from the heat source
@@ -156,14 +156,14 @@ class StateHandler:
             angle = 0
             if state[2] + StateHandler.theta < 360:
                 angle = state[2] + StateHandler.theta
-            nextState[2] = angle
+            nextState[2] = (angle if angle >= 0 else 360 + angle)
             nextState = list(self.predictNextState(agent,tuple(nextState),0))
 
         elif action == 2:
             angle = 0
             if state[2] - StateHandler.theta > -360:
                 angle = state[2] - StateHandler.theta
-            nextState[2] = angle
+            nextState[2] = (angle if angle >= 0 else 360 + angle) 
             nextState = list(self.predictNextState(agent,tuple(nextState),0))
             
         

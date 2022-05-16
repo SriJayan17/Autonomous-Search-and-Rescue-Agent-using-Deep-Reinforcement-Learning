@@ -25,8 +25,13 @@ class Agent:
         Returns:
             Action (int): The discreet action to be taken by the agent. Return values :[0,1,2...n actions]
         """
+        current_state = list(current_state)
         current_state = current_state[2:]
-        return self.brain.update(prev_reward,current_state)
+        current_state[-1] /= 180
+        current_state[2] /= 360
+        current_state.append(current_state[-1] * -1)
+
+        return self.brain.update(prev_reward,tuple(current_state))
     
     def save_brain(self):
         self.brain.save_nn()

@@ -9,7 +9,7 @@ class DynamicEnvironment:
     def __init__(self):
 
         # Initialising objects
-        agent = Agent(8,3,'DQN')
+        agent = Agent(9,3,'DQN')
 
         # Environment Dimensions
         width = 700
@@ -95,7 +95,8 @@ class DynamicEnvironment:
             environment.blit(dynamicAgent,(state[0],state[1]))
 
             if reward == 2:
-                pygame.image.save(environment,"./Resources/Images/Destination Reached.jpg")
+                agent.save_brain()
+                pygame.image.save(environment,"Project/Resources/Images/Destination Reached.jpg")
                 running = False
 
             # Actively listen for event performed
@@ -130,5 +131,5 @@ class DynamicEnvironment:
                         environment.blit(dynamicAgent,(state[0],state[1]))
 
             # To make simulation smooth                 
-            # pygame.time.delay(5)
+            pygame.time.delay(5)
             pygame.display.flip()
