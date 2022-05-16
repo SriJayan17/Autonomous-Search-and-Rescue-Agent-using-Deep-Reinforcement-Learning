@@ -1,7 +1,9 @@
+from tkinter import messagebox
 import pygame
 from Project.Backend.Agent import Agent
 from Project.FrontEnd.Utils.StaticObstacles import grid,borders,boundaries,obstacles,fireFlares,victimsRect
 from Project.FrontEnd.Utils.RewardHandler import RewardHandler
+from tkinter import *
 
 class StaticEnvironment:
 
@@ -76,6 +78,9 @@ class StaticEnvironment:
             if reward == 2:
                 agent.save_brain()
                 pygame.image.save(environment,"Project/Resources/Images/Destination Reached.jpg")
+                root = Tk()
+                root.withdraw()
+                messagebox.showinfo("Result","Agent successfully reached destination!")
                 running = False
 
             # Actively listen for event performed

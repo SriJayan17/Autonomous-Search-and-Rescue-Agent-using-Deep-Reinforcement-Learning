@@ -1,4 +1,5 @@
 from Project.FrontEnd.Utils.StateHandler import StateHandler
+from tkinter import *
 
 class RewardHandler:
 
@@ -53,6 +54,15 @@ class RewardHandler:
         # Higher Negative reward if agent approaches to fire flares
         for fire in self.fireFlares:
             if agentRect.colliderect(fire):
+                root = Tk()
+                root.withdraw()
+                popup = Toplevel()
+                popup.title("Prompt")
+                msg = Label(popup,text="Agent is approaching fire")
+                popup.geometry("150x50+680+380")
+                msg.pack()
+                root.after(300,lambda:root.destroy())
+                popup.mainloop()
                 return -1.5,nextState
 
         # Negative reward if agent moves away from destination (victims)

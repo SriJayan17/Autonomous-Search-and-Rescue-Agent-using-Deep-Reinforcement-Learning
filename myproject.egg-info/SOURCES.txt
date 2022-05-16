@@ -1,5 +1,5 @@
 setup.py
-Project/Stater.py
+Project/Starter.py
 Project/__init__.py
 Project/Backend/Agent.py
 Project/Backend/__init__.py
@@ -8,7 +8,7 @@ Project/Backend/Brains/Memory.py
 Project/Backend/Brains/__init__.py
 Project/FrontEnd/DynamicEnvironment.py
 Project/FrontEnd/Environments.py
-Project/FrontEnd/StaticEnvironmet.py
+Project/FrontEnd/StaticEnvironment.py
 Project/FrontEnd/__init__.py
 Project/FrontEnd/Utils/DynamicGrid.py
 Project/FrontEnd/Utils/DynamicObstacles.py
