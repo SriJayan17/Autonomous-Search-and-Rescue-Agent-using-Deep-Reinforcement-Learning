@@ -27,5 +27,10 @@ class Agent:
         """
         current_state = current_state[2:]
         return self.brain.update(prev_reward,current_state)
-            
+    
+    def save_brain(self):
+        self.brain.save_nn()
+    
+    # def __check_and_load_brain(self):
+        
         

@@ -74,7 +74,8 @@ class StaticEnvironment:
             environment.blit(dynamicAgent,(state[0],state[1]))
 
             if reward == 2:
-                pygame.image.save(environment,"./Resources/Images/Destination Reached.jpg")
+                agent.save_brain()
+                pygame.image.save(environment,"Project/Resources/Images/Destination Reached.jpg")
                 running = False
 
             # Actively listen for event performed

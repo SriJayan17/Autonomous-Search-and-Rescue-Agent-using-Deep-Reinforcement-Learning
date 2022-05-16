@@ -1,4 +1,7 @@
-from .Memory import Memory
+import os
+
+from matplotlib.pyplot import axis
+from Project.Backend.Brains.Memory import Memory
 import torch
 import torch.nn as nn
 import torch.autograd as autograd
@@ -26,22 +29,31 @@ class Network(nn.Module):
         return q_values
 
 class DQNBrain():
+    model_save_path = os.path.join(os.getcwd(),'Project\\Resources\\Model')
     """This class represents the brain of the agent that uses deep Q-learning algorithm.
     """
     def __init__(self,input_nodes,nb_actions,gamma):
         self.gamma = gamma
         self.reward_mean = []
         self.memory = Memory(100000)
-        self.model = Network(input_nodes,nb_actions)
+        # self.model = Network(input_nodes,nb_actions)
+        self.model = self.load_model(input_nodes,nb_actions)
         self.optimizer = optim.Adam(self.model.parameters(),lr=0.08)
         self.last_state = torch.Tensor(input_nodes).unsqueeze(0)
         self.last_reward = 0
         self.last_action = 0
         
     def __select_action(self,state):
-        probs = functional.softmax(self.model.forward(Variable(state,volatile=True))*100)
-        action = probs.multinomial(1)
-        return action.data[0,0]
+        # test = self.model.forward(Variable(state,volatile=True))*100
+        # print(test)
+        # test_softmax = functional.softmax(test,dim=0)
+        # print(f'At axis 0, softmax: {test_softmax}')
+        # test_softmax = functional.softmax(test,dim=1)
+        # print(f'At axis 1, softmax: {test_softmax}')
+        with torch.no_grad():
+            probs = functional.softmax(self.model.forward(Variable(state))*100,dim=1)
+            action = probs.multinomial(1)
+            return action.data[0,0]
     
     def __learn(self,prev_state,current_state,prev_action,prev_reward):
         outputs = self.model.forward(prev_state).gather(1,prev_action.unsqueeze(1)).squeeze(1)
@@ -72,3 +84,19 @@ class DQNBrain():
         if len(self.reward_mean) > 1000:
             del self.reward_mean[0]
         return action
+    
+    def save_nn(self):
+        torch.save(self.model.state_dict(),os.path.join(self.model_save_path,'test.pth'))
+        print('Saved Model! :)')    
+    
+    def load_model(self,nb_inputs,nb_outputs):
+        loaded_model = Network(nb_inputs,nb_outputs)
+        if os.path.exists(os.path.join(self.model_save_path,'test.pth')):
+            print('Found a saved model and loaded!')
+            loaded_model.load_state_dict(torch.load(os.path.join(self.model_save_path,'test.pth')))
+        return loaded_model
+
+
+if __name__ == '__main__':
+    additional_path = 'Project\\Resources\\Model'
+    print(os.path.join(os.getcwd(),additional_path))
