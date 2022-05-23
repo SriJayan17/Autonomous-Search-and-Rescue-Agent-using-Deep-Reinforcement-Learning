@@ -1,8 +1,8 @@
-from tkinter import messagebox
 import pygame
 from Project.Backend.Agent import Agent
 from Project.FrontEnd.Utils.StaticObstacles import grid,borders,boundaries,obstacles,fireFlares,victimsRect
 from Project.FrontEnd.Utils.RewardHandler import RewardHandler
+from tkinter import messagebox
 from tkinter import *
 
 class StaticEnvironment:

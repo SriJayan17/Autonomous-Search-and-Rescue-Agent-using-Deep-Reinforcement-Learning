@@ -3,6 +3,8 @@ from Project.Backend.Agent import Agent
 from Project.FrontEnd.Utils.DynamicObstacles import borders,boundaries,dynamicObstacles,dynamicFireFlares,dynamicVictims
 from Project.FrontEnd.Utils.RewardHandler import RewardHandler
 from Project.FrontEnd.Utils.DynamicGrid import computeGrid
+from tkinter import messagebox
+from tkinter import *
 
 class DynamicEnvironment:
 
@@ -97,6 +99,9 @@ class DynamicEnvironment:
             if reward == 2:
                 agent.save_brain()
                 pygame.image.save(environment,"Project/Resources/Images/Destination Reached.jpg")
+                root = Tk()
+                root.withdraw()
+                messagebox.showinfo("Result","Agent successfully reached destination!")
                 running = False
 
             # Actively listen for event performed
