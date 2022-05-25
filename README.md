@@ -10,7 +10,13 @@ The following dependencies need to be installed to run this project,
 * Pygame
 * Pytorch
 * Tkinter
-### Output Snapshot of one of the successful trails:
+### Snapshot of a successful trail:
 <p align="center">
 <img src="https://user-images.githubusercontent.com/76396579/168641459-32bd33b2-ded3-4f30-91f5-61598e0b8043.jpg" height="300" width="300">
 </p>
+
+### Testing Environment snapshot:
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/76396579/170319111-eb43a54d-a21a-4c43-9749-d8fc19210e80.png" height="300" width="300">
+</p>
+
