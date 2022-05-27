@@ -52,11 +52,14 @@ class DynamicEnvironment:
         index = 0
         grid = computeGrid(dynamicObstacles[index], dynamicFireFlares[index])
         rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index])
-
+        switch = True
         while running:
 
             count+=1
             if count > 2500 and count <= 5000:
+                if switch:
+                    agent.plot_reward_metric()
+                    switch = False
                 index = 1
                 grid = computeGrid(dynamicObstacles[index], dynamicFireFlares[index])
                 rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index])

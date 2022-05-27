@@ -1,6 +1,6 @@
 import os
 
-from matplotlib.pyplot import axis
+import matplotlib.pyplot as plt
 from Project.Backend.Brains.Memory import Memory
 import torch
 import torch.nn as nn
@@ -34,6 +34,7 @@ class DQNBrain():
     """
     def __init__(self,input_nodes,nb_actions,gamma):
         self.gamma = gamma
+        self.reward_tray = []
         self.reward_mean = []
         self.memory = Memory(100000)
         # self.model = Network(input_nodes,nb_actions)
@@ -80,9 +81,11 @@ class DQNBrain():
         self.last_reward = prev_reward
         
         #Keeping a track of the agent's rewards accumulated over time to record it's performance:
-        self.reward_mean.append(prev_reward)
-        if len(self.reward_mean) > 1000:
-            del self.reward_mean[0]
+        self.reward_tray.append(prev_reward)
+        if len(self.reward_tray) == 100:
+            self.reward_mean.append(sum(self.reward_tray)/100)
+            self.reward_tray = []
+            # del self.reward_mean[0]
         return action
     
     def save_nn(self):
@@ -95,8 +98,16 @@ class DQNBrain():
             print('Found a saved model and loaded!')
             loaded_model.load_state_dict(torch.load(os.path.join(self.model_save_path,'test.pth')))
         return loaded_model
+    
+    def plot_rewards(self):
+        plt.plot(self.reward_mean)
+        plt.xlabel('Time Progression')
+        plt.ylabel('Average reward')
+        plt.title('Reward accumulated over time:')
+        # plt.ion()
+        plt.show()
 
-
+    
 if __name__ == '__main__':
     additional_path = 'Project\\Resources\\Model'
     print(os.path.join(os.getcwd(),additional_path))

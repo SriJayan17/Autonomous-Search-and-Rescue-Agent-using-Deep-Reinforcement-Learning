@@ -36,6 +36,8 @@ class Agent:
     def save_brain(self):
         self.brain.save_nn()
     
+    def plot_reward_metric(self):
+        self.brain.plot_rewards()
     # def __check_and_load_brain(self):
         
         
