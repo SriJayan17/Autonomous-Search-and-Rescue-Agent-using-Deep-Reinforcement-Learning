@@ -2,12 +2,13 @@ from copyreg import pickle
 from matplotlib import pyplot as plt
 import pygame
 from Project.Backend.Agent import Agent
+from Project.FrontEnd.Utils.DecisionGrapher import DecisionGrapher
 from Project.FrontEnd.Utils.StaticObstacles import grid,borders,boundaries,obstacles,fireFlares,victimsRect
 from Project.FrontEnd.Utils.RewardHandler import RewardHandler
+from Project.FrontEnd.Utils.TimeGrapher import TimeGrapher
 from tkinter import messagebox
 from tkinter import *
 import time,os
-import pickle
 
 class StaticEnvironment:
 
@@ -55,18 +56,10 @@ class StaticEnvironment:
         timer_switch = True
         
         #Loading the time-lapse record:
-        time_lapse_record = []
-        log_file_path =  os.path.join(os.getcwd(),'Project\\Resources\\log\\static.txt')
-        try:
-            time_lapse_record = pickle.load(open(log_file_path,'rb'))
-        except EOFError as e:
-            print('There wasn\'t any saved instance of log record!')
-            time_lapse_record = []
+        time_grapher = TimeGrapher(os.path.join(os.getcwd(),'Project\\Resources\\log\\static.txt'))
         
-        #Keeping track of the no.of correct decisions taken:
-        num_correct_dec = []
-        correct_dec_track = 0
-        iter_count = 0
+        #To plot the number of correct decisions taken with time:
+        dec_grapher = DecisionGrapher()
         
         while running:
 
@@ -96,12 +89,7 @@ class StaticEnvironment:
             action = agent.take_action(reward,state)
             reward,nextState = rewardHandler.generateReward(dynamicAgent,state,action)
             
-            if reward > 0: correct_dec_track += 1
-            #Tracking the number f correct decisions for evry 100 iterations:
-            if iter_count == 100:
-                num_correct_dec.append(correct_dec_track)
-                correct_dec_track = 0
-                iter_count = 0
+            dec_grapher.correct_decision(reward > 0)
                 
             # Blits the agent into environment based on currentState
             state = nextState
@@ -111,24 +99,10 @@ class StaticEnvironment:
             if reward == 2:
                 #Stop the timer and measure the time:
                 time_lapse = time.time() - start
-                print(f'Time taken: {time_lapse} seconds')
-                time_lapse_record.append(time_lapse)
-                if len(time_lapse_record) > 1:
-                    plt.plot(time_lapse_record)
-                    plt.xlabel('No. of executions/training epochs')
-                    plt.ylabel('Time to reach victims(in seconds)')
-                    plt.show()
-                try:
-                    pickle.dump(time_lapse_record,open(log_file_path,'wb'))
-                except Exception as e:
-                    print(f'Exception occured: {e}')
+                time_grapher.plot_graph(time_lapse)
                 
                 #Plotting the number of correct decision made with time:
-                print(num_correct_dec)
-                plt.plot(num_correct_dec)
-                plt.xlabel('Time')
-                plt.ylabel('Number of correct decisions made')
-                plt.show()
+                dec_grapher.plot_decision_graph()
                 
                 agent.save_brain()
                 
@@ -141,7 +115,6 @@ class StaticEnvironment:
                 messagebox.showinfo("Result","Agent successfully reached destination!")
                 running = False
             
-            iter_count += 1
             
             # Actively listen for event performed
             for event in pygame.event.get():  

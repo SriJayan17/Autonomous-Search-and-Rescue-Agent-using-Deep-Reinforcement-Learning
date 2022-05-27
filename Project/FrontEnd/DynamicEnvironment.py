@@ -1,10 +1,14 @@
+import time
 import pygame
+import os
 from Project.Backend.Agent import Agent
+from Project.FrontEnd.Utils.DecisionGrapher import DecisionGrapher
 from Project.FrontEnd.Utils.DynamicObstacles import borders,boundaries,dynamicObstacles,dynamicFireFlares,dynamicVictims
 from Project.FrontEnd.Utils.RewardHandler import RewardHandler
 from Project.FrontEnd.Utils.DynamicGrid import computeGrid
 from tkinter import messagebox
 from tkinter import *
+from Project.FrontEnd.Utils.TimeGrapher import TimeGrapher
 
 class DynamicEnvironment:
 
@@ -52,14 +56,22 @@ class DynamicEnvironment:
         index = 0
         grid = computeGrid(dynamicObstacles[index], dynamicFireFlares[index])
         rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index])
-        switch = True
+        
+        #switch to denote the starting of the timer to record the time taken to reach
+        # the victims:
+        timer_switch = True
+        
+        #Creating the TimeGrapher object to plot the time taken:
+        time_grapher = TimeGrapher(os.path.join(os.getcwd(),'Project\\Resources\\log\\dynamic.txt'))
+        
+        #Creating the decision grapher to plot the number of correct decsions made during
+        # the runtime:
+        dec_grapher = DecisionGrapher()
+        
         while running:
 
             count+=1
             if count > 2500 and count <= 5000:
-                if switch:
-                    agent.plot_reward_metric()
-                    switch = False
                 index = 1
                 grid = computeGrid(dynamicObstacles[index], dynamicFireFlares[index])
                 rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index])
@@ -94,14 +106,30 @@ class DynamicEnvironment:
             action = agent.take_action(reward,state)
             reward,nextState = rewardHandler.generateReward(dynamicAgent,state,action)
 
+            dec_grapher.correct_decision(reward > 0)
+            
+            if timer_switch:
+                start = time.time()
+                timer_switch = False
+                
             # Blits the agent into environment based on currentState
             state = nextState
             dynamicAgent = pygame.transform.rotate(agentIcon,state[2])
             environment.blit(dynamicAgent,(state[0],state[1]))
 
             if reward == 2:
+                #Plotting the time taken graph:
+                time_lapsed = time.time() - start
+                time_grapher.plot_graphtime(time_lapsed)
+                
+                #Plotting the number of correct decisions made with time:
+                dec_grapher.plot_decision_graph()
+                
+                #Plotting the cumulative reward of the agent:
+                agent.plot_reward_metric()
+                
                 agent.save_brain()
-                pygame.image.save(environment,"Project/Resources/Images/Destination Reached.jpg")
+                pygame.image.save(environment,"Project/Resources/Images/Destination-Reached.jpg")
                 root = Tk()
                 root.withdraw()
                 messagebox.showinfo("Result","Agent successfully reached destination!")

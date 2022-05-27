@@ -1,9 +1,14 @@
+import os
+import time
 import pygame
 from Project.Backend.Agent import Agent
+from Project.FrontEnd.Utils.DecisionGrapher import DecisionGrapher
 from Project.FrontEnd.Utils.RealTimeObstacles import fireFlares,grid,obstacles,borders,victimsRect,walls
 from Project.FrontEnd.Utils.RewardHandler import RewardHandler
 from tkinter import messagebox
 from tkinter import *
+
+from Project.FrontEnd.Utils.TimeGrapher import TimeGrapher
 
 class RealTimeEnvironment:
 
@@ -99,6 +104,15 @@ class RealTimeEnvironment:
         # Initial Reward
         reward = 0
         iteration = 0
+        
+        #Switch to start the timer:
+        timer_switch = True
+        
+        #Loading the time-lapse record:
+        time_grapher = TimeGrapher(os.path.join(os.getcwd(),'Project\\Resources\\log\\real.txt'))
+        
+        #To plot the number of correct decisions taken with time:
+        dec_grapher = DecisionGrapher()
 
         while running:
 
@@ -130,12 +144,29 @@ class RealTimeEnvironment:
 
             environment.blit(victims,(430,600))
 
+            #The timer is started when the agent makes the first move
+            if timer_switch:
+                start = time.time()
+                timer_switch = False
+                
             action = agent.take_action(reward,state)
             reward,nextState = rewardHandler.generateReward(dynamicAgent,state,action)
             
+            dec_grapher.correct_decision(reward > 0)
+            
             if reward == 2:
+                #Stop the timer and measure the time:
+                time_lapse = time.time() - start
+                time_grapher.plot_graph(time_lapse)
+                
+                #Plotting the number of correct decision made with time:
+                dec_grapher.plot_decision_graph()
+                
                 agent.save_brain()
                 pygame.image.save(environment,"Project/Resources/Images/Destination Reached.jpg")
+                
+                agent.plot_reward_metric()
+                
                 root = Tk()
                 root.withdraw()
                 messagebox.showinfo("Result","Agent successfully reached destination!")
