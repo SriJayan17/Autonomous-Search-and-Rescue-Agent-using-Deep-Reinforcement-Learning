@@ -19,7 +19,8 @@ class RealTimeEnvironment:
         # Initialising objects
         agent = Agent(9,3,'DQN')
         obstacles.extend(walls)
-        rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders, victimsRect)
+        rewardHandler = RewardHandler(grid, obstacles, fireFlares, 
+                                      borders, victimsRect,RealTimeEnvironment.flag)
 
         # Environment Dimensions
         width = 700
@@ -93,7 +94,10 @@ class RealTimeEnvironment:
 
         agent_icon = pygame.image.load("Project/Resources/Images/agent.png")
         agent_icon = pygame.transform.scale(agent_icon,(30,30))
-
+        
+        exit_icon = pygame.image.load('Project/Resources/Images/exit.jpg')
+        exit_icon = pygame.transform.scale(exit_icon,(50,30))
+        
         # Control variable
         running = True  
 
@@ -144,8 +148,11 @@ class RealTimeEnvironment:
                 else:
                     environment.blit(fire3,(f.left,f.top))
 
-            environment.blit(victims,(430,600))
-
+            if not RealTimeEnvironment.flag: environment.blit(victims,(430,600))
+            else : environment.blit(exit_icon,(90,640))
+            
+            # environment.blit(exit_icon,(90,640))
+            
             #The timer is started when the agent makes the first move
             if timer_switch:
                 start = time.time()
@@ -155,16 +162,14 @@ class RealTimeEnvironment:
             reward,nextState = rewardHandler.generateReward(dynamicAgent,state,action)
             
             state = nextState
+            
             dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
             environment.blit(dynamicAgent,(state[0],state[1]))
             
             dec_grapher.correct_decision(reward > 0)
             
-            if not RealTimeEnvironment.flag and reward == 2:
-                RealTimeEnvironment.flag = True
-                rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders, pygame.Rect(90,620,60,60))
-
-            elif RealTimeEnvironment.flag and reward == 2:
+            if RealTimeEnvironment.flag and reward == 2:
+                print('Inside the final block')
                 #Stop the timer and measure the time:
                 time_lapse = time.time() - start
                 time_grapher.plot_graph(time_lapse)
@@ -179,8 +184,19 @@ class RealTimeEnvironment:
                 
                 root = Tk()
                 root.withdraw()
-                messagebox.showinfo("Result","Agent successfully reached destination!")
+                messagebox.showinfo("Result","Agent successfully rescued the victims!")
                 running = False
+                
+            if not RealTimeEnvironment.flag and reward == 2:
+                root = Tk()
+                root.withdraw()
+                messagebox.showinfo("Result","Agent successfully reached the victims!")
+                # reward = 0
+                RealTimeEnvironment.flag = True
+                rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders,
+                                              pygame.Rect(90,620,50,30),RealTimeEnvironment.flag)
+
+            
 
 
             # Actively listen for event performed
@@ -190,6 +206,33 @@ class RealTimeEnvironment:
 
                     # Reset control variable to break
                     running = False
+                keys = pygame.key.get_pressed()
+                # if event.type == pygame.K:
+                    
+                if keys[pygame.K_UP]:
+                    reward,nextState = rewardHandler.generateReward(dynamicAgent,state,0)
+                    dec_grapher.correct_decision(reward > 0)
+                    print(reward,nextState)
+                    state = nextState
+                    dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
+                    environment.blit(dynamicAgent,(state[0],state[1]))
+
+                if keys[pygame.K_LEFT]:
+                    reward,nextState = rewardHandler.generateReward(dynamicAgent,state,1)
+                    dec_grapher.correct_decision(reward > 0)
+                    print(reward,nextState)
+                    state = nextState
+                    dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
+                    environment.blit(dynamicAgent,(state[0],state[1]))
+
+                if keys[pygame.K_RIGHT]:
+                    reward,nextState = rewardHandler.generateReward(dynamicAgent,state,2)
+                    dec_grapher.correct_decision(reward > 0)
+                    print(reward,nextState)
+                    state = nextState
+                    dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
+                    environment.blit(dynamicAgent,(state[0],state[1]))
+                    
             
             # pygame.time.delay(5)
             pygame.display.flip()

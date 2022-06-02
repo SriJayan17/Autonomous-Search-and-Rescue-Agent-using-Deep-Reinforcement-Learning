@@ -1,10 +1,11 @@
 from Project.FrontEnd.Utils.StateHandler import StateHandler
 from tkinter import *
 
+
 class RewardHandler:
 
     previousActions = [1,1,1]
-    def __init__(self, grid, obstacles, fireFlares, borders, target):
+    def __init__(self, grid, obstacles, fireFlares, borders, target,is_returning):
 
         self.obstacles = obstacles
         self.fireFlares = fireFlares
@@ -12,6 +13,7 @@ class RewardHandler:
         self.target = target
         self.targetCenter = target.center
         self.stateHandler = StateHandler(grid, fireFlares, target)
+        self.is_returning = is_returning
 
     # Reward generation based on action performed
     def generateReward(self, agent, currentState, action):
@@ -54,16 +56,19 @@ class RewardHandler:
         # Higher Negative reward if agent approaches to fire flares
         for fire in self.fireFlares:
             if agentRect.colliderect(fire):
-                root = Tk()
-                root.withdraw()
-                popup = Toplevel()
-                popup.title("Prompt")
-                msg = Label(popup,text="Agent is approaching fire")
-                popup.geometry("150x50+680+380")
-                msg.pack()
-                root.after(150,lambda:root.destroy())
-                popup.mainloop()
-                return -2,nextState
+                if not self.is_returning:
+                    root = Tk()
+                    root.withdraw()
+                    popup = Toplevel()
+                    popup.title("Prompt")
+                    msg = Label(popup,text="Agent is approaching fire")
+                    popup.geometry("150x50+680+380")
+                    msg.pack()
+                    root.after(150,lambda:root.destroy())
+                    popup.mainloop()
+                    return -2,nextState
+                else:
+                    return -2,currentState
 
         # Negative reward if agent moves away from destination (target)
         if currDist <= updatedDist:

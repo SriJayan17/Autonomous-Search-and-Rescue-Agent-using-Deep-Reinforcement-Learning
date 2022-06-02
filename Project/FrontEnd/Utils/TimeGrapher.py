@@ -22,7 +22,10 @@ class TimeGrapher:
             plt.ylabel('Time to reach victims(in seconds)')
             plt.show()
         
+        print('Graph showed to the user')
         try:
+            print('Inside the try block')
             pickle.dump(self.time_lapse_record,open(self.target_path,'wb'))
+            print('Saved the time taken graph')
         except Exception as e:
             print(f'Error occured when storing in the log file: {e}')

@@ -18,6 +18,7 @@ class DecisionGrapher:
     
     def plot_decision_graph(self):
         # print(self.num_correct_decisions)
+        print('Now plotting the decision graph')
         if len(self.num_correct_decisions) > 1:
             plt.plot(self.num_correct_decisions)
             plt.xlabel('Time')
