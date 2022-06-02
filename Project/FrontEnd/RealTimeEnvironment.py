@@ -152,8 +152,6 @@ class RealTimeEnvironment:
             if not RealTimeEnvironment.flag: environment.blit(victims,(430,600))
             else : environment.blit(exit_icon,(90,640))
             
-            # environment.blit(exit_icon,(90,640))
-            
             #The timer is started when the agent makes the first move
             if timer_switch:
                 start = time.time()
@@ -170,7 +168,6 @@ class RealTimeEnvironment:
             dec_grapher.correct_decision(reward > 0)
             
             if RealTimeEnvironment.flag and reward == 2:
-                print('Inside the final block')
                 #Stop the timer and measure the time:
                 time_lapse = time.time() - start
                 time_grapher.plot_graph(time_lapse)
@@ -197,17 +194,14 @@ class RealTimeEnvironment:
                 rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders,
                                               pygame.Rect(90,620,50,30),RealTimeEnvironment.flag)
 
-            # print(reward, RewardHandler.flag)
-
             # Actively listen for event performed
             for event in pygame.event.get():  
 
                 if event.type == pygame.QUIT:  
-
                     # Reset control variable to break
                     running = False
+
                 keys = pygame.key.get_pressed()
-                # if event.type == pygame.K:
                     
                 if keys[pygame.K_UP]:
                     reward,nextState = rewardHandler.generateReward(dynamicAgent,state,0)

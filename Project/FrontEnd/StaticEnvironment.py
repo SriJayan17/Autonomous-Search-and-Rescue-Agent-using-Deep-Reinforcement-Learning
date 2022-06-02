@@ -12,6 +12,8 @@ import time,os
 
 class StaticEnvironment:
 
+    flag = False
+
     def __init__(self):
 
         # Initialising objects
@@ -39,6 +41,10 @@ class StaticEnvironment:
 
         agent_icon = pygame.image.load("Project/Resources/Images/agent.png")
         agent_icon = pygame.transform.scale(agent_icon,(30,30))
+
+        exit_icon = pygame.image.load('Project/Resources/Images/exit.jpg')
+        exit_icon = pygame.transform.scale(exit_icon,(50,30))
+
 
         # Control variable
         running = True  
@@ -75,7 +81,8 @@ class StaticEnvironment:
             environment.blit(fire,(430,390))
 
             # Loads the Victims into environment
-            environment.blit(victims,(420,250))
+            if not StaticEnvironment.flag: environment.blit(victims,(420,250))
+            else : environment.blit(exit_icon,(60,35))
 
             # Rendering the obstacles in environment
             for obstacle in obstacles:
@@ -96,7 +103,7 @@ class StaticEnvironment:
             dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
             environment.blit(dynamicAgent,(state[0],state[1]))
 
-            if reward == 2:
+            if StaticEnvironment.flag and reward == 2:
                 #Stop the timer and measure the time:
                 time_lapse = time.time() - start
                 time_grapher.plot_graph(time_lapse)
@@ -105,15 +112,24 @@ class StaticEnvironment:
                 dec_grapher.plot_decision_graph()
                 
                 agent.save_brain()
+                pygame.image.save(environment,"Project/Resources/Images/Destination-Reached-realtime.jpg")
                 
-                pygame.image.save(environment,"Project/Resources/Images/Destination Reached.jpg")
-                
-                #The reward accumulation plot is made:
                 agent.plot_reward_metric()
+                
                 root = Tk()
                 root.withdraw()
-                messagebox.showinfo("Result","Agent successfully reached destination!")
+                messagebox.showinfo("Result","Agent successfully rescued the victims!")
                 running = False
+                
+            if not StaticEnvironment.flag and reward == 2:
+                root = Tk()
+                root.withdraw()
+                messagebox.showinfo("Result","Agent successfully reached the victims!")
+                reward = 0
+                StaticEnvironment.flag = True
+                rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders,
+                                              pygame.Rect(60,35,50,30),StaticEnvironment.flag)
+
             
             
             # Actively listen for event performed

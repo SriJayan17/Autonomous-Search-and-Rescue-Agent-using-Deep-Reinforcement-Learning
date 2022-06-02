@@ -12,6 +12,8 @@ from Project.FrontEnd.Utils.TimeGrapher import TimeGrapher
 
 class DynamicEnvironment:
 
+    flag = False
+
     def __init__(self):
 
         # Initialising objects
@@ -39,6 +41,9 @@ class DynamicEnvironment:
         agentIcon = pygame.image.load("Project/Resources/Images/agent.png")
         agentIcon = pygame.transform.scale(agentIcon,(30,30))
 
+        exit_icon = pygame.image.load('Project/Resources/Images/exit.jpg')
+        exit_icon = pygame.transform.scale(exit_icon,(50,30))
+
         # Control variable
         running = True  
 
@@ -55,7 +60,7 @@ class DynamicEnvironment:
         count = 0
         index = 0
         grid = computeGrid(dynamicObstacles[index], dynamicFireFlares[index])
-        rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index])
+        rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index], DynamicEnvironment.flag)
         
         #switch to denote the starting of the timer to record the time taken to reach
         # the victims:
@@ -71,19 +76,31 @@ class DynamicEnvironment:
         while running:
 
             count+=1
-            if count > 2500 and count <= 5000:
+            if count > 4000 and count <= 8000:
                 index = 1
                 grid = computeGrid(dynamicObstacles[index], dynamicFireFlares[index])
-                rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index])
-            elif count > 5000 and count <= 10000:
+                if DynamicEnvironment.flag:
+                    rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, pygame.Rect(60,35,50,30),DynamicEnvironment.flag)
+                else:
+                    rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index],DynamicEnvironment.flag)
+
+            elif count > 8000 and count <= 16000:
                 index = 2
                 grid = computeGrid(dynamicObstacles[index], dynamicFireFlares[index])
-                rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index])
-            elif count > 10000:
+                if DynamicEnvironment.flag:
+                    rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, pygame.Rect(60,35,50,30),DynamicEnvironment.flag)
+                else:
+                    rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index],DynamicEnvironment.flag)
+
+            elif count > 16000:
                 count = 0
                 index = 0
                 grid = computeGrid(dynamicObstacles[index], dynamicFireFlares[index])
-                rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index])
+                if DynamicEnvironment.flag:
+                    rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, pygame.Rect(60,35,50,30),DynamicEnvironment.flag)
+                else:
+                    rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index], borders, dynamicVictims[index],DynamicEnvironment.flag)
+
 
             # Set background color as white
             environment.fill((0,0,0))
@@ -97,7 +114,10 @@ class DynamicEnvironment:
                 environment.blit(fire,(fireFlare.left,fireFlare.top))
 
             # Loads the Victims into environment
-            environment.blit(victims,(dynamicVictims[index].left,dynamicVictims[index].top))
+            if not DynamicEnvironment.flag: 
+                environment.blit(victims,(dynamicVictims[index].left,dynamicVictims[index].top))
+            else : environment.blit(exit_icon,(60,35))
+            
 
             # Rendering the obstacles in environment
             for obstacle in dynamicObstacles[index]:
@@ -117,24 +137,31 @@ class DynamicEnvironment:
             dynamicAgent = pygame.transform.rotate(agentIcon,state[2])
             environment.blit(dynamicAgent,(state[0],state[1]))
 
-            if reward == 2:
-
-                # Plotting the time taken graph:
-                time_lapsed = time.time() - start
-                time_grapher.plot_graph(time_lapsed)
+            if DynamicEnvironment.flag and reward == 2:
+                #Stop the timer and measure the time:
+                time_lapse = time.time() - start
+                time_grapher.plot_graph(time_lapse)
                 
-                # Plotting the number of correct decisions made with time:
+                #Plotting the number of correct decision made with time:
                 dec_grapher.plot_decision_graph()
                 
-                # Plotting the cumulative reward of the agent:
+                agent.save_brain()
+                pygame.image.save(environment,"Project/Resources/Images/Destination-Reached-realtime.jpg")
+                
                 agent.plot_reward_metric()
                 
-                agent.save_brain()
-                pygame.image.save(environment,"Project/Resources/Images/Destination-Reached-dynamic.jpg")
                 root = Tk()
                 root.withdraw()
-                messagebox.showinfo("Result","Agent successfully reached destination!")
+                messagebox.showinfo("Result","Agent successfully rescued the victims!")
                 running = False
+                
+            if not DynamicEnvironment.flag and reward == 2:
+                root = Tk()
+                root.withdraw()
+                messagebox.showinfo("Result","Agent successfully reached the victims!")
+                reward = 0
+                DynamicEnvironment.flag = True
+                rewardHandler = RewardHandler(grid, dynamicObstacles[index], dynamicFireFlares[index],borders, pygame.Rect(60,35,50,30), DynamicEnvironment.flag)
 
             # Actively listen for event performed
             for event in pygame.event.get():  
@@ -168,5 +195,5 @@ class DynamicEnvironment:
                         environment.blit(dynamicAgent,(state[0],state[1]))
 
             # To make simulation smooth                 
-            pygame.time.delay(5)
+            # pygame.time.delay(5)
             pygame.display.flip()
