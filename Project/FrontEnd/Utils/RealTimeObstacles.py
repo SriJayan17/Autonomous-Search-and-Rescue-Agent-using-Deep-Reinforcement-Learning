@@ -19,13 +19,13 @@ walls = [
     pygame.Rect((400,400,20,280)),
     pygame.Rect((500,300,180,20)),
     pygame.Rect((20,400,300,20)),
-    pygame.Rect((420,500,90,20)),
+    pygame.Rect((420,500,30,20)),
     pygame.Rect((590,500,90,20)),
 ]
 
 fireFlares = [
     pygame.Rect(50,280,60,60),
-    pygame.Rect(180,30,60,60),
+    pygame.Rect(140,30,60,60),
     pygame.Rect(580,210,60,60),
     pygame.Rect(430,420,60,60),
     pygame.Rect(590,550,60,60),
@@ -55,7 +55,7 @@ obstacles = [
     # round table
     pygame.Rect(200,480,60,60),
     # fridge
-    pygame.Rect(390,325,30,70),
+    pygame.Rect(395,325,25,70),
     # bed
     pygame.Rect(590,360,50,95),
 ]

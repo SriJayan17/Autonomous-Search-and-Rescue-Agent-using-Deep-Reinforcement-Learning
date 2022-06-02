@@ -12,6 +12,8 @@ from Project.FrontEnd.Utils.TimeGrapher import TimeGrapher
 
 class RealTimeEnvironment:
 
+    flag = False
+
     def __init__(self):
 
         # Initialising objects
@@ -47,7 +49,7 @@ class RealTimeEnvironment:
         wall_images.append([pygame.transform.scale(wall,(20,280)),(400,400)])
         wall_images.append([pygame.transform.scale(wall,(180,20)),(500,300)])
         wall_images.append([pygame.transform.scale(wall,(300,20)),(20,400)])
-        wall_images.append([pygame.transform.scale(wall,(90,20)),(420,500)])
+        wall_images.append([pygame.transform.scale(wall,(30,20)),(420,500)])
         wall_images.append([pygame.transform.scale(wall,(90,20)),(590,500)])
 
         table1 = pygame.image.load("Project/Resources/Images/table1.png")
@@ -131,7 +133,7 @@ class RealTimeEnvironment:
             environment.blit(sofa3,(425,100))
             environment.blit(table2,(260,150))
             environment.blit(roundTable,(180,480))
-            environment.blit(fridge,(370,325))
+            environment.blit(fridge,(375,325))
             environment.blit(bed,(580,350))
 
             for f in fireFlares:
@@ -152,9 +154,17 @@ class RealTimeEnvironment:
             action = agent.take_action(reward,state)
             reward,nextState = rewardHandler.generateReward(dynamicAgent,state,action)
             
+            state = nextState
+            dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
+            environment.blit(dynamicAgent,(state[0],state[1]))
+            
             dec_grapher.correct_decision(reward > 0)
             
-            if reward == 2:
+            if not RealTimeEnvironment.flag and reward == 2:
+                RealTimeEnvironment.flag = True
+                rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders, pygame.Rect(90,620,60,60))
+
+            elif RealTimeEnvironment.flag and reward == 2:
                 #Stop the timer and measure the time:
                 time_lapse = time.time() - start
                 time_grapher.plot_graph(time_lapse)
@@ -163,7 +173,7 @@ class RealTimeEnvironment:
                 dec_grapher.plot_decision_graph()
                 
                 agent.save_brain()
-                pygame.image.save(environment,"Project/Resources/Images/Destination Reached.jpg")
+                pygame.image.save(environment,"Project/Resources/Images/Destination-Reached-realtime.jpg")
                 
                 agent.plot_reward_metric()
                 
@@ -171,10 +181,6 @@ class RealTimeEnvironment:
                 root.withdraw()
                 messagebox.showinfo("Result","Agent successfully reached destination!")
                 running = False
-
-            state = nextState
-            dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
-            environment.blit(dynamicAgent,(state[0],state[1]))
 
 
             # Actively listen for event performed
@@ -185,6 +191,6 @@ class RealTimeEnvironment:
                     # Reset control variable to break
                     running = False
             
-            pygame.time.delay(5)
+            # pygame.time.delay(5)
             pygame.display.flip()
 

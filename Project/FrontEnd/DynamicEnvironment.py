@@ -118,18 +118,19 @@ class DynamicEnvironment:
             environment.blit(dynamicAgent,(state[0],state[1]))
 
             if reward == 2:
-                #Plotting the time taken graph:
+
+                # Plotting the time taken graph:
                 time_lapsed = time.time() - start
-                time_grapher.plot_graphtime(time_lapsed)
+                time_grapher.plot_graph(time_lapsed)
                 
-                #Plotting the number of correct decisions made with time:
+                # Plotting the number of correct decisions made with time:
                 dec_grapher.plot_decision_graph()
                 
-                #Plotting the cumulative reward of the agent:
+                # Plotting the cumulative reward of the agent:
                 agent.plot_reward_metric()
                 
                 agent.save_brain()
-                pygame.image.save(environment,"Project/Resources/Images/Destination-Reached.jpg")
+                pygame.image.save(environment,"Project/Resources/Images/Destination-Reached-dynamic.jpg")
                 root = Tk()
                 root.withdraw()
                 messagebox.showinfo("Result","Agent successfully reached destination!")

@@ -4,14 +4,14 @@ from tkinter import *
 class RewardHandler:
 
     previousActions = [1,1,1]
-    def __init__(self, grid, obstacles, fireFlares, borders, victims):
+    def __init__(self, grid, obstacles, fireFlares, borders, target):
 
         self.obstacles = obstacles
         self.fireFlares = fireFlares
         self.borders = borders
-        self.victims = victims
-        self.victimsCenter = victims.center
-        self.stateHandler = StateHandler(grid, fireFlares, victims)
+        self.target = target
+        self.targetCenter = target.center
+        self.stateHandler = StateHandler(grid, fireFlares, target)
 
     # Reward generation based on action performed
     def generateReward(self, agent, currentState, action):
@@ -26,7 +26,7 @@ class RewardHandler:
         # Calculating Agents's distance from destination
         currentAgentRect = agent.get_rect(topleft = (currentState[0],currentState[1]))
         currentAgentCenter = currentAgentRect.center
-        currDist = self.stateHandler.calculateDistance(self.victimsCenter, currentAgentCenter)
+        currDist = self.stateHandler.calculateDistance(self.targetCenter, currentAgentCenter)
 
         # Predicting next state of agent 
         nextState = self.stateHandler.predictNextState(agent, currentState, action)
@@ -34,10 +34,10 @@ class RewardHandler:
         # Calculating Agent's updated distance from destination
         agentRect = agent.get_rect(topleft = (nextState[0],nextState[1]))
         agentCenter = agentRect.center
-        updatedDist = self.stateHandler.calculateDistance(self.victimsCenter, agentCenter)
+        updatedDist = self.stateHandler.calculateDistance(self.targetCenter, agentCenter)
         
         # Stop if agent reaches Destination
-        if agentRect.colliderect(self.victims):
+        if agentRect.colliderect(self.target):
             print("Reached Destination")
             return 2,nextState
 
@@ -61,15 +61,15 @@ class RewardHandler:
                 msg = Label(popup,text="Agent is approaching fire")
                 popup.geometry("150x50+680+380")
                 msg.pack()
-                root.after(300,lambda:root.destroy())
+                root.after(150,lambda:root.destroy())
                 popup.mainloop()
-                return -1.5,nextState
+                return -2,nextState
 
-        # Negative reward if agent moves away from destination (victims)
+        # Negative reward if agent moves away from destination (target)
         if currDist <= updatedDist:
             return -0.7,nextState
 
-        # Positive Reward if agent approaches near to victims
+        # Positive Reward if agent approaches near to target
         if currDist > updatedDist:
             return 0.8,nextState        
         
