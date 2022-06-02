@@ -16,7 +16,7 @@ class StaticEnvironment:
 
         # Initialising objects
         agent = Agent(9,3,'DQN')
-        rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders, victimsRect)
+        rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders, victimsRect, False)
 
         # Environment Dimensions
         width = 700

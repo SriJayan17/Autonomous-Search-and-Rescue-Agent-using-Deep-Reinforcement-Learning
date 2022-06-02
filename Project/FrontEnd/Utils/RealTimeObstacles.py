@@ -41,7 +41,7 @@ borders = (
 obstacles = [
 
     # table 1
-    pygame.Rect(50,50,90,130),
+    pygame.Rect(50,75,90,130),
     # sofa 1
     pygame.Rect(60,480,100,40),
     pygame.Rect(60,520,40,60),

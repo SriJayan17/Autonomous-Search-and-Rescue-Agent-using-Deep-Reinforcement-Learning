@@ -1,6 +1,7 @@
 import os
 import time
 import pygame
+from sympy import re
 from Project.Backend.Agent import Agent
 from Project.FrontEnd.Utils.DecisionGrapher import DecisionGrapher
 from Project.FrontEnd.Utils.RealTimeObstacles import fireFlares,grid,obstacles,borders,victimsRect,walls
@@ -131,7 +132,7 @@ class RealTimeEnvironment:
             # for obs in obstacles:
             #     pygame.draw.rect(environment, (255, 0, 0), obs)
 
-            environment.blit(table1,(50,50))
+            environment.blit(table1,(50,75))
             environment.blit(sofa1,(60,480))
             environment.blit(sofa2,(250,540))
             environment.blit(sofa3,(425,100))
@@ -191,13 +192,12 @@ class RealTimeEnvironment:
                 root = Tk()
                 root.withdraw()
                 messagebox.showinfo("Result","Agent successfully reached the victims!")
-                # reward = 0
+                reward = 0
                 RealTimeEnvironment.flag = True
                 rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders,
                                               pygame.Rect(90,620,50,30),RealTimeEnvironment.flag)
 
-            
-
+            # print(reward, RewardHandler.flag)
 
             # Actively listen for event performed
             for event in pygame.event.get():  
