@@ -1,7 +1,7 @@
 import os
 
 import matplotlib.pyplot as plt
-from Project.Backend.Brains.Memory import Memory
+from Backend.Brains.Memory import Memory
 import torch
 import torch.nn as nn
 import torch.autograd as autograd

@@ -1,11 +1,11 @@
 from copyreg import pickle
 from matplotlib import pyplot as plt
 import pygame
-from Project.Backend.Agent import Agent
-from Project.FrontEnd.Utils.DecisionGrapher import DecisionGrapher
-from Project.FrontEnd.Utils.StaticObstacles import grid,borders,boundaries,obstacles,fireFlares,victimsRect
-from Project.FrontEnd.Utils.RewardHandler import RewardHandler
-from Project.FrontEnd.Utils.TimeGrapher import TimeGrapher
+from Backend.Agent import Agent
+from FrontEnd.Utils.DecisionGrapher import DecisionGrapher
+from FrontEnd.Utils.StaticObstacles import grid,borders,boundaries,obstacles,fireFlares,victimsRect
+from FrontEnd.Utils.RewardHandler import RewardHandler
+from FrontEnd.Utils.TimeGrapher import TimeGrapher
 from tkinter import messagebox
 from tkinter import *
 import time,os

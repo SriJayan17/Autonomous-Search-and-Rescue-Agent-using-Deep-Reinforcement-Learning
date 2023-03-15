@@ -1,14 +1,14 @@
 import time
 import pygame
 import os
-from Project.Backend.Agent import Agent
-from Project.FrontEnd.Utils.DecisionGrapher import DecisionGrapher
-from Project.FrontEnd.Utils.DynamicObstacles import borders,boundaries,dynamicObstacles,dynamicFireFlares,dynamicVictims
-from Project.FrontEnd.Utils.RewardHandler import RewardHandler
-from Project.FrontEnd.Utils.DynamicGrid import computeGrid
+from Backend.Agent import Agent
+from FrontEnd.Utils.DecisionGrapher import DecisionGrapher
+from FrontEnd.Utils.DynamicObstacles import borders,boundaries,dynamicObstacles,dynamicFireFlares,dynamicVictims
+from FrontEnd.Utils.RewardHandler import RewardHandler
+from FrontEnd.Utils.DynamicGrid import computeGrid
 from tkinter import messagebox
 from tkinter import *
-from Project.FrontEnd.Utils.TimeGrapher import TimeGrapher
+from FrontEnd.Utils.TimeGrapher import TimeGrapher
 
 class DynamicEnvironment:
 

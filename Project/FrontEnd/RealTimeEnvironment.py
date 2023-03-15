@@ -1,15 +1,15 @@
 import os
 import time
 import pygame
-from sympy import re
-from Project.Backend.Agent import Agent
-from Project.FrontEnd.Utils.DecisionGrapher import DecisionGrapher
-from Project.FrontEnd.Utils.RealTimeObstacles import fireFlares,grid,obstacles,borders,victimsRect,walls
-from Project.FrontEnd.Utils.RewardHandler import RewardHandler
+# from sympy import re
+from Backend.Agent import Agent
+from FrontEnd.Utils.DecisionGrapher import DecisionGrapher
+from FrontEnd.Utils.RealTimeObstacles import fireFlares,grid,obstacles,borders,victimsRect,walls
+from FrontEnd.Utils.RewardHandler import RewardHandler
 from tkinter import messagebox
 from tkinter import *
 
-from Project.FrontEnd.Utils.TimeGrapher import TimeGrapher
+from FrontEnd.Utils.TimeGrapher import TimeGrapher
 
 class RealTimeEnvironment:
 

@@ -1,4 +1,4 @@
-from Project.FrontEnd.Utils.StateHandler import StateHandler
+from FrontEnd.Utils.StateHandler import StateHandler
 from tkinter import *
 
 
