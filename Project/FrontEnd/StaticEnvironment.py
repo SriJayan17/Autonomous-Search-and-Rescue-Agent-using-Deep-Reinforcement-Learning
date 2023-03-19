@@ -17,8 +17,8 @@ class StaticEnvironment:
     def __init__(self):
 
         # Initialising objects
-        agent = Agent(9,3,'DQN')
-        rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders, victimsRect, False)
+        # agent = Agent(9,3,'DQN')
+        # rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders, victimsRect, False)
 
         # Environment Dimensions
         width = 700
@@ -49,6 +49,7 @@ class StaticEnvironment:
         # Control variable
         running = True  
 
+        test_agent = Agent(50,2,[10,15])
         # Agent initial coordinates in environment
         agentX = 90
         agentY = 620
@@ -58,14 +59,15 @@ class StaticEnvironment:
         # Initial Reward
         reward = 0
         
+
         #Switch to start the timer:
         timer_switch = True
         
         #Loading the time-lapse record:
-        time_grapher = TimeGrapher(os.path.join(os.getcwd(),'Project\\Resources\\log\\static.txt'))
+        # time_grapher = TimeGrapher(os.path.join(os.getcwd(),'Project\\Resources\\log\\static.txt'))
         
         #To plot the number of correct decisions taken with time:
-        dec_grapher = DecisionGrapher()
+        # dec_grapher = DecisionGrapher()
         
         while running:
 
@@ -93,44 +95,45 @@ class StaticEnvironment:
                 start = time.time()
                 timer_switch = False
                 
-            action = agent.take_action(reward,state)
-            reward,nextState = rewardHandler.generateReward(dynamicAgent,state,action)
+            # action = agent.take_action(reward,state)
+            # reward,nextState = rewardHandler.generateReward(dynamicAgent,state,action)
             
-            dec_grapher.correct_decision(reward > 0)
+            # dec_grapher.correct_decision(reward > 0)
                 
             # Blits the agent into environment based on currentState
-            state = nextState
-            dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
-            environment.blit(dynamicAgent,(state[0],state[1]))
+            # state = nextState
+            # dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
+            # environment.blit(dynamicAgent,(state[0],state[1]))
+            environment.blit(test_agent.shape_copy,test_agent.rect)
 
-            if StaticEnvironment.flag and reward == 2:
-                #Stop the timer and measure the time:
-                time_lapse = time.time() - start
-                time_grapher.plot_graph(time_lapse)
+            # if StaticEnvironment.flag and reward == 2:
+            #     #Stop the timer and measure the time:
+            #     time_lapse = time.time() - start
+            #     time_grapher.plot_graph(time_lapse)
                 
-                #Plotting the number of correct decision made with time:
-                dec_grapher.plot_decision_graph()
+            #     #Plotting the number of correct decision made with time:
+            #     dec_grapher.plot_decision_graph()
                 
-                agent.save_brain()
-                pygame.image.save(environment,"Project/Resources/Images/Destination-Reached-realtime.jpg")
+            #     agent.save_brain()
+            #     pygame.image.save(environment,"Project/Resources/Images/Destination-Reached-realtime.jpg")
                 
-                agent.plot_reward_metric()
+            #     agent.plot_reward_metric()
                 
-                root = Tk()
-                root.withdraw()
-                messagebox.showinfo("Result","Agent successfully rescued the victims!")
-                running = False
+            #     root = Tk()
+            #     root.withdraw()
+            #     messagebox.showinfo("Result","Agent successfully rescued the victims!")
+            #     running = False
                 
-            # if not StaticEnvironment.flag and reward == 2:
-            if reward == 2:
-                root = Tk()
-                root.withdraw()
-                messagebox.showinfo("Result","Agent successfully reached the victims!")
-                reward = 0
-                StaticEnvironment.flag = True
-                rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders,
-                                              pygame.Rect(60,35,50,30),StaticEnvironment.flag)
-                running = False 
+            # # if not StaticEnvironment.flag and reward == 2:
+            # if reward == 2:
+            #     root = Tk()
+            #     root.withdraw()
+            #     messagebox.showinfo("Result","Agent successfully reached the victims!")
+            #     reward = 0
+            #     StaticEnvironment.flag = True
+            #     rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders,
+            #                                   pygame.Rect(60,35,50,30),StaticEnvironment.flag)
+            #     running = False 
 
             
             # Actively listen for event performed
@@ -144,25 +147,28 @@ class StaticEnvironment:
                 if event.type == pygame.KEYDOWN:
                     
                     if event.key == pygame.K_UP:
-                        reward,nextState = rewardHandler.generateReward(dynamicAgent,state,0)
-                        print(reward,nextState)
-                        state = nextState
-                        dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
-                        environment.blit(dynamicAgent,(state[0],state[1]))
+                        # reward,nextState = rewardHandler.generateReward(dynamicAgent,state,0)
+                        # print(reward,nextState)
+                        # state = nextState
+                        # dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
+                        # environment.blit(dynamicAgent,(state[0],state[1]))
+                        test_agent.move()
 
                     if event.key == pygame.K_LEFT:
-                        reward,nextState = rewardHandler.generateReward(dynamicAgent,state,1)
-                        print(reward,nextState)
-                        state = nextState
-                        dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
-                        environment.blit(dynamicAgent,(state[0],state[1]))
+                        # reward,nextState = rewardHandler.generateReward(dynamicAgent,state,1)
+                        # print(reward,nextState)
+                        # state = nextState
+                        # dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
+                        # environment.blit(dynamicAgent,(state[0],state[1]))
+                        test_agent.turn(-15)
 
                     if event.key == pygame.K_RIGHT:
-                        reward,nextState = rewardHandler.generateReward(dynamicAgent,state,2)
-                        print(reward,nextState)
-                        state = nextState
-                        dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
-                        environment.blit(dynamicAgent,(state[0],state[1]))
+                        # reward,nextState = rewardHandler.generateReward(dynamicAgent,state,2)
+                        # print(reward,nextState)
+                        # state = nextState
+                        # dynamicAgent = pygame.transform.rotate(agent_icon,state[2])
+                        # environment.blit(dynamicAgent,(state[0],state[1]))
+                        test_agent.turn(15)
 
             # To make simulation smooth                 
             # pygame.time.delay(5)

@@ -1,6 +1,6 @@
 # from Brains.DQN_brain import DQNBrain
 import math
-from Brains.TD3.Model import TD3
+from .Brains.TD3.Model import TD3
 import pygame
 
 class Agent:
@@ -23,6 +23,9 @@ class Agent:
         self.rect = self.shape_copy.get_rect()
         self.rect.center = (90,620)
 
+        self.prev_rect = self.rect
+        self.prev_shape_copy = self.shape_copy
+
         self.angle = 0
 
         
@@ -33,27 +36,34 @@ class Agent:
         # self.brain = DQNBrain(self.nb_inputs,self.nb_actions,self.gamma)
         self.brain = TD3(num_inputs,num_actions,action_limits,memory,expl_noise)
     
-    def turn(self,turn_angle):
-        if turn_angle < 0:
+    # Turn the agent
+    def turn(self,turn_angle=15):
+        # Right 
+        if turn_angle >= 0:
             if self.angle <= 0:
-                self.angle = -1 * ((abs(self.angle) + 15) % 360)
+                self.angle = -1 * ((abs(self.angle) + abs(turn_angle)) % 360)
             else:
-                self.angle = self.angle - 15
-        elif turn_angle > 0:
+                self.angle = self.angle - abs(turn_angle)
+        # Left
+        elif turn_angle < 0:
             if self.angle >=0:
-                self.angle = (self.angle + 15) % 360
+                self.angle = (self.angle + abs(turn_angle)) % 360
             else:
-                self.angle = self.angle + 15
+                self.angle = self.angle + abs(turn_angle)
         
         #Applying the transformation:
         temp_image = pygame.transform.rotate(self.original_shape,self.angle)
         # old_center = self.rect.center
         temp_rect = temp_image.get_rect()
         temp_rect.center = self.rect.center
+        #Saving the previous state:
+        self.prev_rect = self.rect
+        self.prev_shape_copy = self.shape_copy
         #Updating the rect object of the players:
         self.rect = temp_rect
         self.shape_copy = temp_image
 
+    # To move forward
     def move(self,dist=10):
         temp_rect = self.rect
         old_center = temp_rect.center
@@ -64,8 +74,15 @@ class Agent:
         new_center = (int(old_center[0] + dist*math.cos(ref_angle)),int(old_center[1] - dist*math.sin(ref_angle)))  
         temp_rect.center = new_center
         # reward = -1
+        #Saving the current rect:
+        self.prev_rect = self.rect
         #Updating the current player's rect:
         self.rect = temp_rect
+    
+    # To restore the state of the agent(only for the past one timestep)
+    def restore(self):
+        self.shape_copy = self.prev_shape_copy
+        self.rect = self.prev_rect
 
     def take_action(self,prev_reward,current_state,is_over):
         """Get the action to be taken from the agent
@@ -77,11 +94,12 @@ class Agent:
         Returns:
             Action (int): The discreet action to be taken by the agent. Return values :[0,1,2...n actions]
         """
-        current_state = list(current_state)
-        current_state = current_state[2:]
-        current_state[-1] /= 180
-        current_state[2] /= 360
-        current_state.append(current_state[-1] * -1)
+        #Preprocessing of the parameters:
+        # current_state = list(current_state)
+        # current_state = current_state[2:]
+        # current_state[-1] /= 180
+        # current_state[2] /= 360
+        # current_state.append(current_state[-1] * -1)
 
         return self.brain.select_action(tuple(current_state),prev_reward,is_over)
     

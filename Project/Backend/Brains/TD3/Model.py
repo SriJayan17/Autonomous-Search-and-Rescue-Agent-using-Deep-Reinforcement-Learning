@@ -1,9 +1,9 @@
 import torch
 import torch.nn.functional as F
 
-from Actor import Actor
-from Critic import Critic
-from Memory import ReplayBuffer
+from Backend.Brains.TD3.Actor import Actor
+from Backend.Brains.TD3.Critic import Critic
+from Backend.Brains.TD3.Memory import ReplayBuffer
 
 # Selecting the device (CPU or GPU)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
