@@ -12,16 +12,16 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class TD3(object):
   
-  def __init__(self, state_dim, action_dim, max_action, mem_capacity, expl_noise):
-    self.actor = Actor(state_dim, action_dim, max_action).to(device)
-    self.actor_target = Actor(state_dim, action_dim, max_action).to(device)
+  def __init__(self, state_dim, action_dim, max_action_vec, mem_capacity, expl_noise=0.1):
+    self.actor = Actor(state_dim, action_dim, max_action_vec).to(device)
+    self.actor_target = Actor(state_dim, action_dim, max_action_vec).to(device)
     self.actor_target.load_state_dict(self.actor.state_dict())
     self.actor_optimizer = torch.optim.Adam(self.actor.parameters())
     self.critic = Critic(state_dim, action_dim).to(device)
     self.critic_target = Critic(state_dim, action_dim).to(device)
     self.critic_target.load_state_dict(self.critic.state_dict())
     self.critic_optimizer = torch.optim.Adam(self.critic.parameters())
-    self.max_action = max_action
+    self.max_action = max_action_vec
     self.memory = ReplayBuffer(mem_capacity)
     self.prev_reward = None
     self.prev_state = None 
@@ -30,7 +30,7 @@ class TD3(object):
     self.state_dim = state_dim
     self.action_dim = action_dim
 
-  def select_action(self, state, prev_reward, done):
+  def select_action(self, state, prev_reward, done=False):
     #Note: This function has to be called for the last state (succesful/failure) of the training
     #process, even if there is no action to take. This is to store that last (s,s',a,r,d) in memory.
     state = torch.Tensor(state.reshape(1, -1)).to(device)

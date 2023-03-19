@@ -88,7 +88,7 @@ class StaticEnvironment:
             for obstacle in obstacles:
                 pygame.draw.rect(environment,(255, 0, 0), obstacle)
             
-            #The timer is started when the agent makes the first move
+            # The timer is started when the agent makes the first move
             if timer_switch:
                 start = time.time()
                 timer_switch = False
@@ -121,7 +121,8 @@ class StaticEnvironment:
                 messagebox.showinfo("Result","Agent successfully rescued the victims!")
                 running = False
                 
-            if not StaticEnvironment.flag and reward == 2:
+            # if not StaticEnvironment.flag and reward == 2:
+            if reward == 2:
                 root = Tk()
                 root.withdraw()
                 messagebox.showinfo("Result","Agent successfully reached the victims!")
@@ -129,8 +130,8 @@ class StaticEnvironment:
                 StaticEnvironment.flag = True
                 rewardHandler = RewardHandler(grid, obstacles, fireFlares, borders,
                                               pygame.Rect(60,35,50,30),StaticEnvironment.flag)
+                running = False 
 
-            
             
             # Actively listen for event performed
             for event in pygame.event.get():  

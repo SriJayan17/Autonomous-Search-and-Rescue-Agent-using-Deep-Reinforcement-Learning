@@ -1,21 +1,73 @@
-from .Brains.DQN_brain import DQNBrain
+# from Brains.DQN_brain import DQNBrain
+import math
+from Brains.TD3.Model import TD3
 import pygame
 
 class Agent:
     """This class represents the agent itself
     """
-    
-    def __init__(self,num_inputs,num_actions,brain_type='DQN'):
+
+    def __init__(self,num_inputs,num_actions,action_limits,memory=100,expl_noise=0.1):
         self.nb_inputs = num_inputs
         self.nb_actions = num_actions
+        #Initial Coordinates
+        # self.X = 90
+        # self.Y = 620
+        
+        self.original_shape = pygame.Surface((12,30))
+        self.original_shape.fill((255,0,0))  # Color of the agent
+        self.original_shape.set_colorkey((0,0,0))
+
+        self.shape_copy = self.original_shape.copy()
+
+        self.rect = self.shape_copy.get_rect()
+        self.rect.center = (90,620)
+
+        self.angle = 0
+
         
         #Storage capacity of the brain of the agent:
-        if brain_type.upper() == 'DQN':
+        # if brain_type.upper() == 'DQN':
             #Discount factor for calculating future actions:
-            self.gamma = 0.9
-            self.brain = DQNBrain(self.nb_inputs,self.nb_actions,self.gamma)
+            # self.gamma = 0.9
+        # self.brain = DQNBrain(self.nb_inputs,self.nb_actions,self.gamma)
+        self.brain = TD3(num_inputs,num_actions,action_limits,memory,expl_noise)
     
-    def take_action(self,prev_reward,current_state):
+    def turn(self,turn_angle):
+        if turn_angle < 0:
+            if self.angle <= 0:
+                self.angle = -1 * ((abs(self.angle) + 15) % 360)
+            else:
+                self.angle = self.angle - 15
+        elif turn_angle > 0:
+            if self.angle >=0:
+                self.angle = (self.angle + 15) % 360
+            else:
+                self.angle = self.angle + 15
+        
+        #Applying the transformation:
+        temp_image = pygame.transform.rotate(self.original_shape,self.angle)
+        # old_center = self.rect.center
+        temp_rect = temp_image.get_rect()
+        temp_rect.center = self.rect.center
+        #Updating the rect object of the players:
+        self.rect = temp_rect
+        self.shape_copy = temp_image
+
+    def move(self,dist=10):
+        temp_rect = self.rect
+        old_center = temp_rect.center
+        #Modifying the angle for convenience:
+        ref_angle = 90 + self.angle
+        ref_angle = (math.pi/180) * ref_angle
+        #Updating the center:
+        new_center = (int(old_center[0] + dist*math.cos(ref_angle)),int(old_center[1] - dist*math.sin(ref_angle)))  
+        temp_rect.center = new_center
+        # reward = -1
+        #Updating the current player's rect:
+        self.rect = temp_rect
+
+    def take_action(self,prev_reward,current_state,is_over):
         """Get the action to be taken from the agent
 
         Args:
@@ -31,13 +83,13 @@ class Agent:
         current_state[2] /= 360
         current_state.append(current_state[-1] * -1)
 
-        return self.brain.update(prev_reward,tuple(current_state))
+        return self.brain.select_action(tuple(current_state),prev_reward,is_over)
     
-    def save_brain(self):
-        self.brain.save_nn()
+    # def save_brain(self):
+    #     self.brain.save_nn()
     
-    def plot_reward_metric(self):
-        self.brain.plot_rewards()
+    # def plot_reward_metric(self):
+    #     self.brain.plot_rewards()
     # def __check_and_load_brain(self):
         
         
