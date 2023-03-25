@@ -1,3 +1,4 @@
+README.md
 setup.py
 Project/Starter.py
 Project/__init__.py
@@ -6,15 +7,16 @@ Project/Backend/__init__.py
 Project/Backend/Brains/DQN_brain.py
 Project/Backend/Brains/Memory.py
 Project/Backend/Brains/__init__.py
-Project/FrontEnd/DynamicEnvironment.py
 Project/FrontEnd/Environments.py
 Project/FrontEnd/StaticEnvironment.py
+Project/FrontEnd/Trainning_Environment.py
 Project/FrontEnd/__init__.py
-Project/FrontEnd/Utils/DynamicGrid.py
-Project/FrontEnd/Utils/DynamicObstacles.py
+Project/FrontEnd/Utils/DecisionGrapher.py
 Project/FrontEnd/Utils/RewardHandler.py
 Project/FrontEnd/Utils/StateHandler.py
 Project/FrontEnd/Utils/StaticObstacles.py
+Project/FrontEnd/Utils/TimeGrapher.py
+Project/FrontEnd/Utils/Training_Env_Obstacles.py
 Project/FrontEnd/Utils/__init__.py
 myproject.egg-info/PKG-INFO
 myproject.egg-info/SOURCES.txt

@@ -1,27 +1,28 @@
 # from Brains.DQN_brain import DQNBrain
 import math
-from .Brains.TD3.Model import TD3
+import numpy as np
+from Project.Backend.Brains.TD3.Model import TD3
 import pygame
 
 class Agent:
     """This class represents the agent itself
     """
 
-    def __init__(self,num_inputs,num_actions,action_limits,memory=100,expl_noise=0.1):
+    def __init__(self,num_inputs,num_actions, action_limits, initial_position, memory=100,expl_noise=0.1):
         self.nb_inputs = num_inputs
         self.nb_actions = num_actions
         #Initial Coordinates
         # self.X = 90
         # self.Y = 620
         
-        self.original_shape = pygame.Surface((12,30))
-        self.original_shape.fill((255,0,0))  # Color of the agent
+        self.original_shape = pygame.Surface((15,30))
+        self.original_shape.fill((0,0,255))  # Color of the agent
         self.original_shape.set_colorkey((0,0,0))
 
         self.shape_copy = self.original_shape.copy()
 
         self.rect = self.shape_copy.get_rect()
-        self.rect.center = (90,620)
+        self.rect.center = initial_position
 
         self.prev_rect = self.rect
         self.prev_shape_copy = self.shape_copy
@@ -65,7 +66,7 @@ class Agent:
 
     # To move forward
     def move(self,dist=10):
-        temp_rect = self.rect
+        temp_rect = self.rect.copy()
         old_center = temp_rect.center
         #Modifying the angle for convenience:
         ref_angle = 90 + self.angle
@@ -101,7 +102,8 @@ class Agent:
         # current_state[2] /= 360
         # current_state.append(current_state[-1] * -1)
 
-        return self.brain.select_action(tuple(current_state),prev_reward,is_over)
+        # return self.brain.select_action(np.array(current_state),prev_reward,is_over)
+        return [np.random.randint(-15,15), np.random.randint(10,15)]
     
     # def save_brain(self):
     #     self.brain.save_nn()
@@ -109,5 +111,8 @@ class Agent:
     # def plot_reward_metric(self):
     #     self.brain.plot_rewards()
     # def __check_and_load_brain(self):
+
+    def __hash__(self):
+        return hash(str(self))
         
         
