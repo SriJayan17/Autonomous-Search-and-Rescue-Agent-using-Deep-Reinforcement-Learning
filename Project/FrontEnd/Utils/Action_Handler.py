@@ -2,6 +2,7 @@ import math
 import numpy as np
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
 
+#To check if two rectangles are colliding
 def isColliding(objects, rect):
     for object in objects:
         if object.colliderect(rect):
@@ -9,6 +10,8 @@ def isColliding(objects, rect):
     
     return False
 
+# To check if a particular move causes an agent to collide with borders, obstacles, boundaries,
+# or other agents
 def isPermissible(agent_list, index):
     objects = [borders,boundaries, obstacles]
     objects.append((agent_list[i].rect for i in range(len(agent_list)) if i != index))
@@ -35,61 +38,47 @@ def generateReward(previous_rect, current_rect):
     
     return reward
     
-
+# To calculate euclidean distance
 def eucledianDist(a,b):
     return math.sqrt(math.pow((a[0]-b[0]),2) + math.pow((a[1]-b[1]),2))
 
-def updateOwnState(agent, agents):
-    x = agent.rect.x
-    y = agent.rect.y
+#Generating the agent state that is has to be fed into the neural network to make decisions
+# State = own_state + neighbor_state + flock_center (precise)
+# TODO: Add a switch to toggle between training scenario and testing scenario
+def prepare_agent_state(agent_list,target_index,state_dict,initial_state_dict,vicinity_radius=600):
+    running_x = running_y = 0
+    result = []
+    n = len(agent_list)
+    for i in range(n):
+        if i == target_index:
+            result.extend(state_dict[i])
+        else:
+            target_agent = agent_list[target_index]
+            distance = eucledianDist((target_agent.rect.x, target_agent.rect.y),
+                                     (agent_list[i].rect.x,agent_list[i].rect.y))
+            if distance <= vicinity_radius:
+                result.extend(state_dict[i])
+            else:
+                result.extend(initial_state_dict[i])
+        running_x += agent_list[i].rect.x
+        running_y += agent_list[i].rect.y
+
+    # Adding the flock center
+    result.append(running_x / n)
+    result.append(running_y / n)
+    return result
+
+
+# Generate state for an individual agent
+def get_state(agent_rect, obstacle_grid,fire_grid):
+    x = agent_rect.x
+    y = agent_rect.y
     
     # add obstacle_density
     # add heat_intensity
 
-    sumX = sumY = 0
-    for agent in agents:
-        sumX = sumX + agent.rect.x
-        sumY = sumY + agent.rect.y
-    
-    # flock_center = (sumX/len(agents), sumY/len(agents))
-
-    return [x, y, sumX/len(agents), sumY/len(agents)]
-
-def appendNeighbourState(agent, agents, agents_state, agents_state_copy, initial_state):
-
-    vicinity_radius = 600
-    for neighbour in agents:
-        if agent.rect != neighbour.rect:
-            distance = eucledianDist((agent.rect.x, agent.rect.y),(neighbour.rect.x,neighbour.rect.y))
-            if distance <= vicinity_radius:
-                agents_state[agent].extend(agents_state_copy[neighbour])
-            else:
-                agents_state[agent].extend(initial_state[neighbour])
-
-
-
-def updateState(agents, initial_state):
-    state_map = {}
-    for agent in agents:
-        state_map[agent] = updateOwnState(agent, agents)
-
-    state_map_copy = {}
-
-    for map in state_map:
-        state_map_copy[map] = list(state_map[map])
-
-    for agent in agents:
-        appendNeighbourState(agent, agents, state_map, state_map_copy, initial_state)
-    
-    return state_map
+    return [x, y]
 
 def reachedVictims(agent):
     return victimsRect.colliderect(agent.rect)
-# Testing
-
-# state_map = updateState(agents)
-# for key in state_map:
-#     print(key,state_map[key])
-
-# print(generateReward(agents[1], agents[3]))   
 

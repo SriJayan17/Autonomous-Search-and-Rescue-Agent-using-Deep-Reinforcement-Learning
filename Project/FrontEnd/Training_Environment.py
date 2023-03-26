@@ -1,5 +1,7 @@
 
 import pygame
+from copy import deepcopy
+
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
 from Project.Backend.Agent import Agent
 from Project.FrontEnd.Utils.Action_Handler import *
@@ -18,17 +20,23 @@ class TrainingEnvironment:
         self.numberOfAgents = 4
         self.agentModels = []
 
+        self.base_velocity = 7.5
+
         # Initialising the agents
+        # Action limit:
+        #    Angle -> Varies from -15 to 15
+        #    Velocity -> Varies from (7.5 - 2.5 = 5) to (7.5 + 2.5 = 10)
         for agent in agents:
-            self.agentModels.append(Agent(12,2,2, (agent.x, agent.y)))
+            self.agentModels.append(Agent(10,2,[15,2.5],(agent.x, agent.y)))
 
-        
-        self.initialState = {}
-        for agent in self.agentModels:
-            self.initialState[agent] = updateOwnState(agent, self.agentModels)
+           
+        self.state_dict = [None] * self.numberOfAgents
+        for i in range(self.numberOfAgents):
+            self.state_dict[i] = get_state(self.agentModels[i].rect,obstacleGrid,fireGrid)
+            # self.initialState[agent] = updateOwnState(agent, self.agentModels)
+        self.initial_state_dict = deepcopy(self.state_dict) 
 
-        self.agentsState = self.initialState
-        self.agentRewards = [0]* self.numberOfAgents
+        self.agentRewards = [0] * self.numberOfAgents
 
         self.victims = pygame.image.load("Project/Resources/Images/victims.png")
         self.victims = pygame.transform.scale(self.victims,(victimsRect.width, victimsRect.height))
@@ -47,7 +55,7 @@ class TrainingEnvironment:
     def perform_action(self,agent_list,index,turn_angle,dist):
         agent = agent_list[index]
         agent.turn(turn_angle)
-        agent.move(dist)
+        agent.move(self.base_velocity + dist)
         if not isPermissible(agent_list, index):
             agent.restore_move()
             self.agentRewards[index] = -2
@@ -84,24 +92,21 @@ class TrainingEnvironment:
 
             # Automated Navigation
             for i in range(self.numberOfAgents):
-                action = self.agentModels[i].take_action(self.agentRewards[i],self.agentsState[self.agentModels[i]],False)
+                action = self.agentModels[i]\
+                             .take_action(self.agentRewards[i],
+                                          prepare_agent_state(self.agentModels, i, 
+                                                              self.state_dict, self.initial_state_dict),
+                                          False)
+                # print(action)
                 self.perform_action(self.agentModels, i, action[0], action[1])
                 
                 
-                # if(not isPermissible(self.agentModels, i)):
-                #     print("Collision")
-                #     self.agentModels[i].restore()
-                #     self.agentRewards[i] = -2
-                #     # continue
-                # else:
                 # if self.agentRewards[i] != -2: #Action was permitted
                 #     self.agentRewards[i] = generateReward(self.agentModels[i].prev_rect, self.agentModels[i].rect)
                 
                 # Update the state in both the cases, because, the orientation of the rectange might have changed:
-                # self.agentsState = updateState(self.agentModels, self.initialState)
+                self.state_dict[i] = get_state(self.agentModels[i].rect, obstacleGrid, fireGrid)
 
-                # print(self.agentsState)
-                # print(self.agentRewards)
                 environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)
                 if(reachedVictims(self.agentModels[i])):
                     self.stop()

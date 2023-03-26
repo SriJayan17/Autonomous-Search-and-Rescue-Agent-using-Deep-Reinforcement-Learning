@@ -1,10 +1,12 @@
 # from Brains.DQN_brain import DQNBrain
 import math
 import numpy as np
-from Project.Backend.Brains.TD3.Model import TD3
-from Project.FrontEnd.Utils.Action_Handler import isPermissible
 import pygame
 from copy import deepcopy
+from sklearn.preprocessing import MinMaxScaler
+
+from Project.Backend.Brains.TD3.Model import TD3
+from Project.FrontEnd.Utils.Action_Handler import isPermissible
 
 class Agent:
     """This class represents the agent itself
@@ -26,18 +28,17 @@ class Agent:
         self.rect = self.shape_copy.get_rect()
         self.rect.center = initial_position
 
+        self.temp_memory = []
+        self.scaler = MinMaxScaler()
+        self.timer = 0
+
         # self.prev_rect = self.rect
         # self.prev_shape_copy = self.shape_copy
+
         self.prev_center = self.rect.center
 
         self.angle = 0
 
-        
-        #Storage capacity of the brain of the agent:
-        # if brain_type.upper() == 'DQN':
-            #Discount factor for calculating future actions:
-            # self.gamma = 0.9
-        # self.brain = DQNBrain(self.nb_inputs,self.nb_actions,self.gamma)
         self.brain = TD3(num_inputs,num_actions,action_limits,memory,expl_noise)
     
     # Turn the agent
@@ -78,17 +79,7 @@ class Agent:
         new_center = (int(old_center[0] + dist*math.cos(ref_angle)),int(old_center[1] - dist*math.sin(ref_angle)))  
         self.prev_center = self.rect.center
         self.rect.center = new_center
-        # temp_rect.center = new_center
-        #Saving the current rect:
-        # self.prev_rect = self.rect.copy()
-        #Updating the current player's rect:
-        # self.rect = temp_rect
-    
-    # To restore the state of the agent after turning
-    # def restore_turn(self):
-    #     self.shape_copy = self.prev_shape_copy.copy()
-    #     self.rect = self.prev_rect.copy()
-    
+        
     def restore_move(self):
         self.rect.center = self.prev_center
 
@@ -97,20 +88,28 @@ class Agent:
 
         Args:
             prev_reward (float): The recent reward received by the agent
-            current_state (list || tuple): An iterable containing the parameters of the environment
+            current_state (list): An iterable containing the parameters of the environment
 
         Returns:
             Action (int): The discreet action to be taken by the agent. Return values :[0,1,2...n actions]
         """
         #Preprocessing of the parameters:
-        # current_state = list(current_state)
-        # current_state = current_state[2:]
-        # current_state[-1] /= 180
-        # current_state[2] /= 360
-        # current_state.append(current_state[-1] * -1)
 
-        # return self.brain.select_action(np.array(current_state),prev_reward,is_over)
+        if self.timer > 100:
+            # Scale the input and use neural network for decision
+            current_state = self.scaler.transform([current_state])[0]
+            return self.brain.select_action(np.array(current_state),prev_reward,is_over)
+        elif self.timer < 100:
+            # Take store record, increment timer, random action
+            self.temp_memory.append(current_state)
+        else:
+            # Fit the scaler, delete temp_memory, increment timer, random action
+            self.scaler.fit(self.temp_memory)
+            del self.temp_memory
+
+        self.timer += 1
         return [np.random.randint(-15,15), np.random.randint(10,15)]
+        
     
     # def save_brain(self):
     #     self.brain.save_nn()

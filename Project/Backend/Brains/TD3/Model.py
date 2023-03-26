@@ -33,7 +33,7 @@ class TD3(object):
   def select_action(self, state, prev_reward, done=False):
     #Note: This function has to be called for the last state (succesful/failure) of the training
     #process, even if there is no action to take. This is to store that last (s,s',a,r,d) in memory.
-    print(state)
+    # print(state)
     state = torch.Tensor(state.reshape(1, -1)).to(device)
     self.prev_reward = prev_reward
     if self.prev_state is not None:
