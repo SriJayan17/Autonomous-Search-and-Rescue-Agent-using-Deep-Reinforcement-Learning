@@ -2,7 +2,9 @@
 import math
 import numpy as np
 from Project.Backend.Brains.TD3.Model import TD3
+from Project.FrontEnd.Utils.Action_Handler import isPermissible
 import pygame
+from copy import deepcopy
 
 class Agent:
     """This class represents the agent itself
@@ -24,8 +26,9 @@ class Agent:
         self.rect = self.shape_copy.get_rect()
         self.rect.center = initial_position
 
-        self.prev_rect = self.rect
-        self.prev_shape_copy = self.shape_copy
+        # self.prev_rect = self.rect
+        # self.prev_shape_copy = self.shape_copy
+        self.prev_center = self.rect.center
 
         self.angle = 0
 
@@ -58,32 +61,36 @@ class Agent:
         temp_rect = temp_image.get_rect()
         temp_rect.center = self.rect.center
         #Saving the previous state:
-        self.prev_rect = self.rect
-        self.prev_shape_copy = self.shape_copy
+        # self.prev_rect = self.rect.copy()
+        # self.prev_shape_copy = self.shape_copy.copy()
         #Updating the rect object of the players:
         self.rect = temp_rect
         self.shape_copy = temp_image
 
     # To move forward
     def move(self,dist=10):
-        temp_rect = self.rect.copy()
-        old_center = temp_rect.center
+        # temp_rect = self.rect.copy()
+        old_center = self.rect.center
         #Modifying the angle for convenience:
         ref_angle = 90 + self.angle
         ref_angle = (math.pi/180) * ref_angle
         #Updating the center:
         new_center = (int(old_center[0] + dist*math.cos(ref_angle)),int(old_center[1] - dist*math.sin(ref_angle)))  
-        temp_rect.center = new_center
-        # reward = -1
+        self.prev_center = self.rect.center
+        self.rect.center = new_center
+        # temp_rect.center = new_center
         #Saving the current rect:
-        self.prev_rect = self.rect
+        # self.prev_rect = self.rect.copy()
         #Updating the current player's rect:
-        self.rect = temp_rect
+        # self.rect = temp_rect
     
-    # To restore the state of the agent(only for the past one timestep)
-    def restore(self):
-        self.shape_copy = self.prev_shape_copy
-        self.rect = self.prev_rect
+    # To restore the state of the agent after turning
+    # def restore_turn(self):
+    #     self.shape_copy = self.prev_shape_copy.copy()
+    #     self.rect = self.prev_rect.copy()
+    
+    def restore_move(self):
+        self.rect.center = self.prev_center
 
     def take_action(self,prev_reward,current_state,is_over):
         """Get the action to be taken from the agent

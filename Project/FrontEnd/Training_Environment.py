@@ -1,9 +1,12 @@
+import sys
+sys.path.append("e:/AI_projects/RescueAI/")
+
 import pygame
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
 from Project.Backend.Agent import Agent
 from Project.FrontEnd.Utils.Action_Handler import *
 
-class TrainningEnvironment:
+class TrainingEnvironment:
 
     reachedVictims = False
     stopSimulation = False
@@ -17,9 +20,11 @@ class TrainningEnvironment:
         self.numberOfAgents = 4
         self.agentModels = []
 
+        # Initialising the agents
         for agent in agents:
             self.agentModels.append(Agent(12,2,2, (agent.x, agent.y)))
 
+        
         self.initialState = {}
         for agent in self.agentModels:
             self.initialState[agent] = updateOwnState(agent, self.agentModels)
@@ -38,8 +43,16 @@ class TrainningEnvironment:
 
     
     def stop(self):
-        
+
         self.stopSimulation = True
+    
+    def perform_action(self,agent_list,index,turn_angle,dist):
+        agent = agent_list[index]
+        agent.turn(turn_angle)
+        agent.move(dist)
+        if not isPermissible(agent_list, index):
+            agent.restore_move()
+            self.agentRewards[index] = -2
     
     def run(self):
 
@@ -74,21 +87,20 @@ class TrainningEnvironment:
             # Automated Navigation
             for i in range(self.numberOfAgents):
                 action = self.agentModels[i].take_action(self.agentRewards[i],self.agentsState[self.agentModels[i]],False)
-                self.agentModels[i].turn(action[0])
-                self.agentModels[i].move(action[1])
+                self.perform_action(self.agentModels, i, action[0], action[1])
                 
-                neighbours = []
-                for agent in self.agentModels:
-                    if(agent != self.agentModels[i]):
-                        neighbours.append(agent.rect)
-
-                if(not isPermissible(self.agentModels[i].rect, neighbours)):
-                    print("Collision")
-                    self.agentModels[i].restore()
-                    self.agentRewards[i] = -2
-                else:
-                    self.agentRewards[i] = generateReward(self.agentModels[i].prev_rect, self.agentModels[i].rect)
-                    self.agentsState = updateState(self.agentModels, self.initialState)
+                
+                # if(not isPermissible(self.agentModels, i)):
+                #     print("Collision")
+                #     self.agentModels[i].restore()
+                #     self.agentRewards[i] = -2
+                #     # continue
+                # else:
+                # if self.agentRewards[i] != -2: #Action was permitted
+                #     self.agentRewards[i] = generateReward(self.agentModels[i].prev_rect, self.agentModels[i].rect)
+                
+                # Update the state in both the cases, because, the orientation of the rectange might have changed:
+                # self.agentsState = updateState(self.agentModels, self.initialState)
 
                 # print(self.agentsState)
                 # print(self.agentRewards)
@@ -99,24 +111,24 @@ class TrainningEnvironment:
             for event in pygame.event.get():  
 
                 if event.type == pygame.QUIT:  
-
                     self.stop()
                 
                 if event.type == pygame.KEYDOWN:
                     
                     if event.key == pygame.K_UP:
-                        self.agentModels[0].move()
-
+                        self.perform_action(self.agentModels, 0, 0, 10)
+            
                     if event.key == pygame.K_LEFT:
-                        self.agentModels[0].turn(-15)
-
+                        self.perform_action(self.agentModels, 0, -15, 10)
+                        
                     if event.key == pygame.K_RIGHT:
-                        self.agentModels[0].turn(15)
+                        self.perform_action(self.agentModels, 0, 15, 10)
+            
             
             pygame.display.flip()
             pygame.time.delay(20)
 
 
-obj = TrainningEnvironment()
+obj = TrainingEnvironment()
 obj.run()
 

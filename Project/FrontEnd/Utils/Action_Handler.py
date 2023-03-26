@@ -9,10 +9,10 @@ def isColliding(objects, rect):
     
     return False
 
-def isPermissible(current_rect, neighbours):
-
-    objects = [borders,boundaries, obstacles, neighbours]
-
+def isPermissible(agent_list, index):
+    objects = [borders,boundaries, obstacles]
+    objects.append((agent_list[i].rect for i in range(len(agent_list)) if i != index))
+    current_rect = agent_list[index].rect
     for object in objects:
         if(isColliding(object, current_rect)):
             return False
@@ -51,9 +51,9 @@ def updateOwnState(agent, agents):
         sumX = sumX + agent.rect.x
         sumY = sumY + agent.rect.y
     
-    flock_center = (sumX/len(agents), sumY/len(agents))
+    # flock_center = (sumX/len(agents), sumY/len(agents))
 
-    return [x, y, flock_center]
+    return [x, y, sumX/len(agents), sumY/len(agents)]
 
 def appendNeighbourState(agent, agents, agents_state, agents_state_copy, initial_state):
 
