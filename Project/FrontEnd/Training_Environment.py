@@ -1,5 +1,3 @@
-import sys
-sys.path.append("e:/AI_projects/RescueAI/")
 
 import pygame
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
