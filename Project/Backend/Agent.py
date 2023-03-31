@@ -19,7 +19,7 @@ class Agent:
         # self.X = 90
         # self.Y = 620
         
-        self.original_shape = pygame.Surface((15,30))
+        self.original_shape = pygame.Surface((12,30))
         self.original_shape.fill((0,0,255))  # Color of the agent
         self.original_shape.set_colorkey((0,0,0))
 
@@ -27,6 +27,8 @@ class Agent:
 
         self.rect = self.shape_copy.get_rect()
         self.rect.center = initial_position
+
+        self.rect.top
 
         self.temp_memory = []
         self.scaler = MinMaxScaler()
@@ -41,6 +43,13 @@ class Agent:
 
         self.brain = TD3(num_inputs,num_actions,action_limits,memory,expl_noise)
     
+    # To get the proper angle value for the calculation of obstacle density
+    def get_proper_angle(self):
+        if self.angle < 0:
+            self.angle += 360
+        final_angle = (self.angle + 90) % 360
+        return final_angle 
+
     # Turn the agent
     def turn(self,turn_angle=15):
         # Right 
@@ -94,21 +103,21 @@ class Agent:
             Action (int): The discreet action to be taken by the agent. Return values :[0,1,2...n actions]
         """
         #Preprocessing of the parameters:
+        current_state = np.array(current_state)
+        # if self.timer > 100:
+        #     # Scale the input and use neural network for decision
+        #     current_state = self.scaler.transform([current_state])[0]
+        return self.brain.select_action(current_state,prev_reward,is_over)
+        # elif self.timer < 100:
+        #     # Take store record, increment timer, random action
+        #     self.temp_memory.append(current_state)
+        # else:
+        #     # Fit the scaler, delete temp_memory, increment timer, random action
+        #     self.scaler.fit(self.temp_memory)
+        #     del self.temp_memory
 
-        if self.timer > 100:
-            # Scale the input and use neural network for decision
-            current_state = self.scaler.transform([current_state])[0]
-            return self.brain.select_action(np.array(current_state),prev_reward,is_over)
-        elif self.timer < 100:
-            # Take store record, increment timer, random action
-            self.temp_memory.append(current_state)
-        else:
-            # Fit the scaler, delete temp_memory, increment timer, random action
-            self.scaler.fit(self.temp_memory)
-            del self.temp_memory
-
-        self.timer += 1
-        return [np.random.randint(-15,15), np.random.randint(10,15)]
+        # self.timer += 1
+        # return [np.random.randint(-15,15), np.random.randint(10,15)]
         
     
     # def save_brain(self):

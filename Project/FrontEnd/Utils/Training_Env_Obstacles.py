@@ -1,11 +1,22 @@
 import numpy as np
 import pygame
 
+# Function to mark the presence of obstacle in the grid:
+def opaque_obstacle(obstacle_rect,grid,boundary):
+    x = obstacle_rect.left + boundary
+    y = obstacle_rect.top + boundary
+
+    height = obstacle_rect.height
+    width = obstacle_rect.width
+
+    grid[y:y+height,x:x+width] = 1
+
 width = 1500
 height = 750
 
-cols = 1510
-row = 760
+# Here, extra offset = border = 30 (1500+'30',750+'30')
+cols = 1530
+row = 780
 
 obstacles = (
     pygame.Rect(330,80,20,650),
@@ -45,13 +56,14 @@ fireFlares = (
     pygame.Rect(1330,25,45,45),
 )
 
-borders = (
-    pygame.Rect(0,20,20,height-40),
-    pygame.Rect(0,0,width,20),
-    pygame.Rect(width-20,20,20,height-40),
-    pygame.Rect(0,height-20,width,20),
-)
+# borders = (
+#     pygame.Rect(0,20,20,height-40),
+#     pygame.Rect(0,0,width,20),
+#     pygame.Rect(width-20,20,20,height-40),
+#     pygame.Rect(0,height-20,width,20),
+# )
 
+# Width of boundaries = 20
 boundaries = (
     pygame.Rect(0,20,20,(height-40)/2-50),
     pygame.Rect(0,(height-40)/2+50,20,(height-40)/2+50),
@@ -63,38 +75,47 @@ boundaries = (
     pygame.Rect((width-40)/2+50,height-20,(width-40)/2+50,20),
 )
 
+# Tuple containing the pair of center points where the agents should be placed initially
 agents = (
-    pygame.Rect(30,(height-40)/2,30,30),
-    pygame.Rect(1440,(height-40)/2,30,30),
-    pygame.Rect((width-40)/2-15,30,30,30),
-    pygame.Rect((width-40)/2-15,690,30,30),
+    [32,(height-40)/2],
+    [1422,(height-40)/2],
+    [(width-40)/2-33,30],
+    [(width-40)/2-33,690]
+    # pygame.Rect(50,(height-40)/2,30,30),
+    # pygame.Rect(1440,(height-40)/2,30,30),
+    # pygame.Rect((width-40)/2-15,30,30,30),
+    # pygame.Rect((width-40)/2-15,690,30,30),
 )
 victimsRect = pygame.Rect(880,230,50,50)
 
 obstacleGrid = np.zeros((row,cols))
 fireGrid = np.zeros((row,cols))
 
+# Making the borders opaque
 obstacleGrid[:30,:] = 1
 obstacleGrid[row-30:,:] = 1
 obstacleGrid[30:row-30,:30] = 1
 obstacleGrid[30:row-30,cols-30:] = 1
 
+# Making the obstacles opaque
 for obstacle in obstacles:
+    opaque_obstacle(obstacle,obstacleGrid,row-height)
 
-    x = obstacle.left
-    y = obstacle.top
+#Making the boundaries opaque:
+for boundary in boundaries:
+    opaque_obstacle(boundary,obstacleGrid,row-height)
 
-    height = obstacle.height
-    width = obstacle.width
-
-    obstacleGrid[x:x+width,y:y+height] = 1
-
+# Marking the fire in fireGrid
 for fire in fireFlares:
+    opaque_obstacle(fire,fireGrid,row-height)
 
-    x = fire.left
-    y = fire.top
-
-    height = fire.height
-    width = fire.width
-
-    fireGrid[x:x+width, y:y+height] = 2
+#Visualising the grid:
+# from PIL import Image
+# import cv2
+# if __name__ == '__main__':
+#     print(obstacleGrid.shape)
+#     # img = Image.fromarray(obstacleGrid, 'RGB')
+#     # img.save('my.png')
+#     cv2.imshow('image',obstacleGrid)
+#     cv2.waitKey(0) 
+#     cv2.destroyAllWindows()

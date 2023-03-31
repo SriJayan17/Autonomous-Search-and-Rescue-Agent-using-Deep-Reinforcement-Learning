@@ -1,6 +1,7 @@
 import math
 import numpy as np
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
+from Project.FrontEnd.Utils.Training_Env_Obstacles import height,width
 
 #To check if two rectangles are colliding
 def isColliding(objects, rect):
@@ -13,12 +14,20 @@ def isColliding(objects, rect):
 # To check if a particular move causes an agent to collide with borders, obstacles, boundaries,
 # or other agents
 def isPermissible(agent_list, index):
-    objects = [borders,boundaries, obstacles]
+    objects = [boundaries, obstacles]
     objects.append((agent_list[i].rect for i in range(len(agent_list)) if i != index))
     current_rect = agent_list[index].rect
+    current_rect_center = current_rect.center
+
+    #Checking if the agent has collided with an obstacle
     for object in objects:
         if(isColliding(object, current_rect)):
             return False
+
+    #Checking if the agent has hit the borders    
+    if (current_rect_center[0] < 0 or current_rect_center[0] > width) or \
+       (current_rect_center[1] < 0 or current_rect_center[1] > height):
+        return False
     
     return True
 
@@ -68,16 +77,29 @@ def prepare_agent_state(agent_list,target_index,state_dict,initial_state_dict,vi
     result.append(running_y / n)
     return result
 
+# To calculate the obstacle/fire intensity, given the top left point and the grid in concern.
+def get_sensor_output(left,top,dim_x,dim_y,boundary,grid):
+    # row_num = top + 30
+    # col_num = left + 30
+    row_num = top + boundary
+    col_num = left + boundary
+    sensor_area = grid[row_num:row_num+dim_y,col_num:col_num+dim_x].copy()
+    sensor_area = sensor_area.ravel()
+    sensor_output = np.sum(sensor_area)
+    return sensor_output
 
 # Generate state for an individual agent
-def get_state(agent_rect, obstacle_grid,fire_grid):
+def get_state(agent_rect,obstacle_grid,fire_grid,target_point,extra_info):
+    
     x = agent_rect.x
     y = agent_rect.y
     
     # add obstacle_density
+
+
     # add heat_intensity
 
-    return [x, y]
+    return [x/extra_info['scale_x'], y/extra_info['scale_y']]
 
 def reachedVictims(agent):
     return victimsRect.colliderect(agent.rect)

@@ -1,3 +1,5 @@
+import sys
+sys.path.append("e:/AI_projects/RescueAI/")
 
 import pygame
 from copy import deepcopy
@@ -22,19 +24,26 @@ class TrainingEnvironment:
 
         self.base_velocity = 7.5
 
+        self.state_extra_info = {
+            'scale_x' : self.width,
+            'scale_y' : self.height,
+            'max_distance' : math.sqrt((self.width)**2 + (self.height)**2),
+            'intensity_area_dim' : 30
+        }
+
         # Initialising the agents
         # Action limit:
         #    Angle -> Varies from -15 to 15
         #    Velocity -> Varies from (7.5 - 2.5 = 5) to (7.5 + 2.5 = 10)
         for agent in agents:
-            self.agentModels.append(Agent(10,2,[15,2.5],(agent.x, agent.y)))
+            self.agentModels.append(Agent(10,2,[15,2.5],(agent[0], agent[1])))
 
            
         self.state_dict = [None] * self.numberOfAgents
-        for i in range(self.numberOfAgents):
-            self.state_dict[i] = get_state(self.agentModels[i].rect,obstacleGrid,fireGrid)
-            # self.initialState[agent] = updateOwnState(agent, self.agentModels)
-        self.initial_state_dict = deepcopy(self.state_dict) 
+        # for i in range(self.numberOfAgents):
+        #     self.state_dict[i] = get_state(self.agentModels[i].rect,obstacleGrid,fireGrid)
+        #     # self.initialState[agent] = updateOwnState(agent, self.agentModels)
+        # self.initial_state_dict = deepcopy(self.state_dict) 
 
         self.agentRewards = [0] * self.numberOfAgents
 
@@ -65,13 +74,17 @@ class TrainingEnvironment:
         pygame.init()
         pygame.display.set_caption("Search and Rescue Simulation")
         environment = pygame.display.set_mode((self.width, self.height)) 
+        
+        print(f'Initial top_left of agent: {self.agentModels[0].rect.topleft}')
+        print(f'Initial bottom right of agent: {self.agentModels[0].rect.bottomright}')
+        print(f'Center of the agent: {self.agentModels[0].rect.center}')
 
         while not self.stopSimulation:
 
             environment.fill((0,0,0))
 
             for boundary in boundaries:
-                pygame.draw.rect(environment, (255, 0, 0), boundary)
+                pygame.draw.rect(environment, (0, 255, 0), boundary)
 
             for obstacle in obstacles:
                 pygame.draw.rect(environment,(255, 0, 0), obstacle)
@@ -91,26 +104,27 @@ class TrainingEnvironment:
             #     self.stop()
 
             # Automated Navigation
-            for i in range(self.numberOfAgents):
-                action = self.agentModels[i]\
-                             .take_action(self.agentRewards[i],
-                                          prepare_agent_state(self.agentModels, i, 
-                                                              self.state_dict, self.initial_state_dict),
-                                          False)
-                # print(action)
-                self.perform_action(self.agentModels, i, action[0], action[1])
+            # for i in range(self.numberOfAgents):
+            #     action = self.agentModels[i]\
+            #                  .take_action(self.agentRewards[i],
+            #                               prepare_agent_state(self.agentModels, i, 
+            #                                                   self.state_dict, self.initial_state_dict),
+            #                               False)
+            #     # print(action)
+            #     self.perform_action(self.agentModels, i, action[0], action[1])
                 
                 
-                # if self.agentRewards[i] != -2: #Action was permitted
-                #     self.agentRewards[i] = generateReward(self.agentModels[i].prev_rect, self.agentModels[i].rect)
+            #     # if self.agentRewards[i] != -2: #Action was permitted
+            #     #     self.agentRewards[i] = generateReward(self.agentModels[i].prev_rect, self.agentModels[i].rect)
                 
-                # Update the state in both the cases, because, the orientation of the rectange might have changed:
-                self.state_dict[i] = get_state(self.agentModels[i].rect, obstacleGrid, fireGrid)
+            #     # Update the state in both the cases, because, the orientation of the rectange might have changed:
+            #     self.state_dict[i] = get_state(self.agentModels[i].rect, obstacleGrid, fireGrid, victimsRect.center ,self.state_extra_info)
 
-                environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)
-                if(reachedVictims(self.agentModels[i])):
-                    self.stop()
-
+            #     environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)
+            #     if(reachedVictims(self.agentModels[i])):
+            #         self.stop()
+            
+            # Manual Control:
             for event in pygame.event.get():  
 
                 if event.type == pygame.QUIT:  
@@ -120,13 +134,23 @@ class TrainingEnvironment:
                     
                     if event.key == pygame.K_UP:
                         self.perform_action(self.agentModels, 0, 0, 10)
+                        print(self.agentModels[0].get_proper_angle())
+                        print(f'Center: {self.agentModels[0].rect.center}')
             
                     if event.key == pygame.K_LEFT:
                         self.perform_action(self.agentModels, 0, -15, 10)
-                        
+                        print(self.agentModels[0].get_proper_angle())
+                        print(f'Center: {self.agentModels[0].rect.center}')
+
                     if event.key == pygame.K_RIGHT:
                         self.perform_action(self.agentModels, 0, 15, 10)
+                        print(self.agentModels[0].get_proper_angle())
+                        print(f'Center: {self.agentModels[0].rect.center}')
             
+            # Manual Control
+            environment.blit(self.agentModels[0].shape_copy,self.agentModels[0].rect)
+            if(reachedVictims(self.agentModels[0])):
+                self.stop()
             
             pygame.display.flip()
             pygame.time.delay(20)
