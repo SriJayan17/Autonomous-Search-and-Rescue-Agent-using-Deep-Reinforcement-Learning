@@ -27,8 +27,10 @@ class Agent:
 
         self.rect = self.shape_copy.get_rect()
         self.rect.center = initial_position
-
-        self.rect.top
+        
+        self.forward_pt = ((self.rect.topleft[0]+self.rect.topright[0])/2,
+                          (self.rect.topleft[1]+self.rect.topright[1])/2)
+        self.prev_forward_pt = self.forward_pt
 
         self.temp_memory = []
         self.scaler = MinMaxScaler()
@@ -52,18 +54,31 @@ class Agent:
 
     # Turn the agent
     def turn(self,turn_angle=15):
-        # Right 
+        rad = (turn_angle * math.pi)/180
+        self.prev_forward_pt = self.forward_pt
+        x,y = self.forward_pt
+        # Right -> Clockwise 
         if turn_angle >= 0:
             if self.angle <= 0:
                 self.angle = -1 * ((abs(self.angle) + abs(turn_angle)) % 360)
             else:
                 self.angle = self.angle - abs(turn_angle)
-        # Left
+            # Moving the forward_pt:
+            self.forward_pt = (
+                int(x*math.cos(rad) + y*math.sin(rad)),
+                int(-x*math.sin(rad) + y*math.cos(rad))
+            )
+        # Left -> AntiClockwise
         elif turn_angle < 0:
             if self.angle >=0:
                 self.angle = (self.angle + abs(turn_angle)) % 360
             else:
                 self.angle = self.angle + abs(turn_angle)
+            # Moving the forward_pt:
+            self.forward_pt = (
+                int(x*math.cos(rad) - y*math.sin(rad)),
+                int(x*math.sin(rad) + y*math.cos(rad))
+            )
         
         #Applying the transformation:
         temp_image = pygame.transform.rotate(self.original_shape,self.angle)
@@ -81,16 +96,22 @@ class Agent:
     def move(self,dist=10):
         # temp_rect = self.rect.copy()
         old_center = self.rect.center
+        self.prev_forward_pt = self.forward_pt
         #Modifying the angle for convenience:
         ref_angle = 90 + self.angle
         ref_angle = (math.pi/180) * ref_angle
         #Updating the center:
         new_center = (int(old_center[0] + dist*math.cos(ref_angle)),int(old_center[1] - dist*math.sin(ref_angle)))  
+        #Updating the forward pt:
+        x,y = self.forward_pt
+        self.forward_pt = (int(x + dist*math.cos(ref_angle)),int(y - dist*math.sin(ref_angle)))
+
         self.prev_center = self.rect.center
         self.rect.center = new_center
         
     def restore_move(self):
         self.rect.center = self.prev_center
+        self.forward_pt = self.prev_forward_pt
 
     def take_action(self,prev_reward,current_state,is_over):
         """Get the action to be taken from the agent

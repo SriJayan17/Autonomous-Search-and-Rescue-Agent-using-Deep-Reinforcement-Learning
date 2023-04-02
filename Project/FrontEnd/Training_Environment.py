@@ -1,6 +1,3 @@
-import sys
-sys.path.append("e:/AI_projects/RescueAI/")
-
 import pygame
 from copy import deepcopy
 
@@ -20,6 +17,7 @@ class TrainingEnvironment:
         self.width = 1500
 
         self.numberOfAgents = 4
+        self.state_len = 9
         self.agentModels = []
 
         self.base_velocity = 7.5
@@ -28,7 +26,7 @@ class TrainingEnvironment:
             'scale_x' : self.width,
             'scale_y' : self.height,
             'max_distance' : math.sqrt((self.width)**2 + (self.height)**2),
-            'intensity_area_dim' : 30
+            'intensity_area_dim' : 30,
         }
 
         # Initialising the agents
@@ -36,14 +34,18 @@ class TrainingEnvironment:
         #    Angle -> Varies from -15 to 15
         #    Velocity -> Varies from (7.5 - 2.5 = 5) to (7.5 + 2.5 = 10)
         for agent in agents:
-            self.agentModels.append(Agent(10,2,[15,2.5],(agent[0], agent[1])))
+            self.agentModels.append(Agent(self.numberOfAgents * self.state_len + 2,
+                                          2,
+                                          [15,2.5],
+                                          (agent[0], agent[1])
+                                          )
+                                    )
 
            
         self.state_dict = [None] * self.numberOfAgents
-        # for i in range(self.numberOfAgents):
-        #     self.state_dict[i] = get_state(self.agentModels[i].rect,obstacleGrid,fireGrid)
-        #     # self.initialState[agent] = updateOwnState(agent, self.agentModels)
-        # self.initial_state_dict = deepcopy(self.state_dict) 
+        for i in range(self.numberOfAgents):
+            self.state_dict[i] = get_state(self.agentModels[i],self.state_extra_info)
+        self.initial_state_dict = deepcopy(self.state_dict) 
 
         self.agentRewards = [0] * self.numberOfAgents
 
@@ -56,6 +58,7 @@ class TrainingEnvironment:
         self.agentIcon = pygame.image.load("Project/Resources/Images/agent.png")
         self.agentIcon = pygame.transform.scale(self.agentIcon,(30,30))
 
+        self.flock_center = calc_flock_center(self.agentModels)
     
     def stop(self):
 
@@ -63,7 +66,7 @@ class TrainingEnvironment:
     
     def perform_action(self,agent_list,index,turn_angle,dist):
         agent = agent_list[index]
-        agent.turn(turn_angle)
+        if turn_angle != 0: agent.turn(turn_angle)
         agent.move(self.base_velocity + dist)
         if not isPermissible(agent_list, index):
             agent.restore_move()
@@ -75,9 +78,9 @@ class TrainingEnvironment:
         pygame.display.set_caption("Search and Rescue Simulation")
         environment = pygame.display.set_mode((self.width, self.height)) 
         
-        print(f'Initial top_left of agent: {self.agentModels[0].rect.topleft}')
-        print(f'Initial bottom right of agent: {self.agentModels[0].rect.bottomright}')
-        print(f'Center of the agent: {self.agentModels[0].rect.center}')
+        # print(f'Initial top_left of agent: {self.agentModels[0].rect.topleft}')
+        # print(f'Initial bottom right of agent: {self.agentModels[0].rect.bottomright}')
+        # print(f'Center of the agent: {self.agentModels[0].rect.center}')
 
         while not self.stopSimulation:
 
@@ -94,63 +97,74 @@ class TrainingEnvironment:
             for fire in fireFlares:
                 environment.blit(self.fire, (fire.x, fire.y))
 
-            # To get Manual Control
-            # if(not isPermissible(self.agentModels[0].rect)):
-            #     print("Collision")
-            #     self.agentModels[0].restore()
+            # Automated Navigation
+            for i in range(self.numberOfAgents):
+                action = self.agentModels[i]\
+                             .take_action(self.agentRewards[i],
+                                          prepare_agent_state(self.agentModels, 
+                                                              i, 
+                                                              self.state_dict, 
+                                                              self.initial_state_dict,
+                                                              self.flock_center,
+                                                              ),
+                                          False
+                                          )
+                # print(action)
+                self.perform_action(self.agentModels, i, action[0], action[1])
+                
+                
+                if self.agentRewards[i] != -2: #Action was permitted
+                    self.agentRewards[i] = generateReward(self.agentModels[i].prev_center, self.agentModels[i].rect)
+                
+                # Update the state in both the cases, because, the orientation of the rectange might have changed:
+                self.state_dict[i] = get_state(self.agentModels[i],self.state_extra_info)
 
+                environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)
+                if(reachedVictims(self.agentModels[i])):
+                    self.stop()
+            
+            # Manual Control:
+            # for event in pygame.event.get():  
+
+            #     if event.type == pygame.QUIT:  
+            #         self.stop()
+                
+            #     if event.type == pygame.KEYDOWN:
+                    
+            #         if event.key == pygame.K_UP:
+            #             self.perform_action(self.agentModels, 0, 0, 10)
+            #             # print(self.agentModels[0].get_proper_angle())
+            #             # print(f'Center: {self.agentModels[0].rect.center}')
+            #             # print(f'Forward_pt : {self.agentModels[0].forward_pt}')
+            #             #Testing state generation
+            #             state = get_state(self.agentModels[0],self.state_extra_info)
+            #             print(state)
+            #             print(len(state))
+
+            #         if event.key == pygame.K_LEFT:
+            #             self.perform_action(self.agentModels, 0, -15, 10)
+            #             # print(self.agentModels[0].get_proper_angle())
+            #             # print(f'Center: {self.agentModels[0].rect.center}')
+            #             # print(f'Forward_pt : {self.agentModels[0].forward_pt}')
+            #             #Testing state generation
+            #             state = get_state(self.agentModels[0],self.state_extra_info)
+            #             print(state)
+            #             print(len(state))
+
+            #         if event.key == pygame.K_RIGHT:
+            #             self.perform_action(self.agentModels, 0, 15, 10)
+            #             # print(self.agentModels[0].get_proper_angle())
+            #             # print(f'Center: {self.agentModels[0].rect.center}')
+            #             # print(f'Forward_pt : {self.agentModels[0].forward_pt}')
+            #             #Testing state generation
+            #             state = get_state(self.agentModels[0],self.state_extra_info)
+            #             print(state)
+            #             print(len(state))
+            
+            # # Manual Control
             # environment.blit(self.agentModels[0].shape_copy,self.agentModels[0].rect)
             # if(reachedVictims(self.agentModels[0])):
             #     self.stop()
-
-            # Automated Navigation
-            # for i in range(self.numberOfAgents):
-            #     action = self.agentModels[i]\
-            #                  .take_action(self.agentRewards[i],
-            #                               prepare_agent_state(self.agentModels, i, 
-            #                                                   self.state_dict, self.initial_state_dict),
-            #                               False)
-            #     # print(action)
-            #     self.perform_action(self.agentModels, i, action[0], action[1])
-                
-                
-            #     # if self.agentRewards[i] != -2: #Action was permitted
-            #     #     self.agentRewards[i] = generateReward(self.agentModels[i].prev_rect, self.agentModels[i].rect)
-                
-            #     # Update the state in both the cases, because, the orientation of the rectange might have changed:
-            #     self.state_dict[i] = get_state(self.agentModels[i].rect, obstacleGrid, fireGrid, victimsRect.center ,self.state_extra_info)
-
-            #     environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)
-            #     if(reachedVictims(self.agentModels[i])):
-            #         self.stop()
-            
-            # Manual Control:
-            for event in pygame.event.get():  
-
-                if event.type == pygame.QUIT:  
-                    self.stop()
-                
-                if event.type == pygame.KEYDOWN:
-                    
-                    if event.key == pygame.K_UP:
-                        self.perform_action(self.agentModels, 0, 0, 10)
-                        print(self.agentModels[0].get_proper_angle())
-                        print(f'Center: {self.agentModels[0].rect.center}')
-            
-                    if event.key == pygame.K_LEFT:
-                        self.perform_action(self.agentModels, 0, -15, 10)
-                        print(self.agentModels[0].get_proper_angle())
-                        print(f'Center: {self.agentModels[0].rect.center}')
-
-                    if event.key == pygame.K_RIGHT:
-                        self.perform_action(self.agentModels, 0, 15, 10)
-                        print(self.agentModels[0].get_proper_angle())
-                        print(f'Center: {self.agentModels[0].rect.center}')
-            
-            # Manual Control
-            environment.blit(self.agentModels[0].shape_copy,self.agentModels[0].rect)
-            if(reachedVictims(self.agentModels[0])):
-                self.stop()
             
             pygame.display.flip()
             pygame.time.delay(20)
