@@ -2,7 +2,7 @@
 import math
 import numpy as np
 import pygame
-from copy import deepcopy
+# from copy import deepcopy
 from sklearn.preprocessing import MinMaxScaler
 
 from Project.Backend.Brains.TD3.Model import TD3
@@ -28,9 +28,9 @@ class Agent:
         self.rect = self.shape_copy.get_rect()
         self.rect.center = initial_position
         
-        self.forward_pt = ((self.rect.topleft[0]+self.rect.topright[0])/2,
-                          (self.rect.topleft[1]+self.rect.topright[1])/2)
-        self.prev_forward_pt = self.forward_pt
+        # self.forward_pt = ((self.rect.topleft[0]+self.rect.topright[0])/2,
+        #                   (self.rect.topleft[1]+self.rect.topright[1])/2)
+        # self.prev_forward_pt = self.forward_pt
 
         self.temp_memory = []
         self.scaler = MinMaxScaler()
@@ -55,8 +55,8 @@ class Agent:
     # Turn the agent
     def turn(self,turn_angle=15):
         rad = (turn_angle * math.pi)/180
-        self.prev_forward_pt = self.forward_pt
-        x,y = self.forward_pt
+        # self.prev_forward_pt = self.forward_pt
+        # x,y = self.forward_pt
         # Right -> Clockwise 
         if turn_angle >= 0:
             if self.angle <= 0:
@@ -64,10 +64,11 @@ class Agent:
             else:
                 self.angle = self.angle - abs(turn_angle)
             # Moving the forward_pt:
-            self.forward_pt = (
-                int(x*math.cos(rad) + y*math.sin(rad)),
-                int(-x*math.sin(rad) + y*math.cos(rad))
-            )
+            # self.forward_pt = (
+            #     int(x*math.cos(rad) - y*math.sin(rad)),
+            #     int(x*math.sin(rad) + y*math.cos(rad))
+            # )
+            
         # Left -> AntiClockwise
         elif turn_angle < 0:
             if self.angle >=0:
@@ -75,10 +76,10 @@ class Agent:
             else:
                 self.angle = self.angle + abs(turn_angle)
             # Moving the forward_pt:
-            self.forward_pt = (
-                int(x*math.cos(rad) - y*math.sin(rad)),
-                int(x*math.sin(rad) + y*math.cos(rad))
-            )
+            # self.forward_pt = (
+            #     int(x*math.cos(rad) + y*math.sin(rad)),
+            #     int(-x*math.sin(rad) + y*math.cos(rad))
+            # )
         
         #Applying the transformation:
         temp_image = pygame.transform.rotate(self.original_shape,self.angle)
@@ -96,22 +97,22 @@ class Agent:
     def move(self,dist=10):
         # temp_rect = self.rect.copy()
         old_center = self.rect.center
-        self.prev_forward_pt = self.forward_pt
+        # self.prev_forward_pt = self.forward_pt
         #Modifying the angle for convenience:
         ref_angle = 90 + self.angle
         ref_angle = (math.pi/180) * ref_angle
         #Updating the center:
         new_center = (int(old_center[0] + dist*math.cos(ref_angle)),int(old_center[1] - dist*math.sin(ref_angle)))  
         #Updating the forward pt:
-        x,y = self.forward_pt
-        self.forward_pt = (int(x + dist*math.cos(ref_angle)),int(y - dist*math.sin(ref_angle)))
+        # x,y = self.forward_pt
+        # self.forward_pt = (int(x + dist*math.cos(ref_angle)),int(y - dist*math.sin(ref_angle)))
 
         self.prev_center = self.rect.center
         self.rect.center = new_center
         
     def restore_move(self):
         self.rect.center = self.prev_center
-        self.forward_pt = self.prev_forward_pt
+        # self.forward_pt = self.prev_forward_pt
 
     def take_action(self,prev_reward,current_state,is_over):
         """Get the action to be taken from the agent
@@ -128,7 +129,7 @@ class Agent:
         # if self.timer > 100:
         #     # Scale the input and use neural network for decision
         #     current_state = self.scaler.transform([current_state])[0]
-        return self.brain.select_action(current_state,prev_reward,is_over)
+        return self.brain.select_action(current_state)
         # elif self.timer < 100:
         #     # Take store record, increment timer, random action
         #     self.temp_memory.append(current_state)

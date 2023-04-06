@@ -23,25 +23,22 @@ class TD3(object):
     self.critic_optimizer = torch.optim.Adam(self.critic.parameters())
     self.max_action = max_action_vec
     self.memory = ReplayBuffer(mem_capacity)
-    self.prev_reward = None
-    self.prev_state = None 
-    self.prev_action = None
+    # self.prev_reward = None
+    # self.prev_state = None 
+    # self.prev_action = None
     self.expl_noise = expl_noise
     self.state_dim = state_dim
     self.action_dim = action_dim
 
-  def select_action(self, state, prev_reward, done=False):
-    #Note: This function has to be called for the last state (succesful/failure) of the training
-    #process, even if there is no action to take. This is to store that last (s,s',a,r,d) in memory.
-    # print(state)
+  def select_action(self, state):
     state = torch.Tensor(state.reshape(1, -1)).to(device)
-    self.prev_reward = prev_reward
-    if self.prev_state is not None:
-      self.memory.add((self.prev_state,state,self.prev_action,self.prev_reward,done))
-      if done: return
-    self.prev_state = state
-    self.prev_action = self.actor(state).cpu().data.numpy().flatten() 
-    return self.prev_action
+    return self.actor(state).cpu().data.numpy().flatten()
+    # self.prev_reward = prev_reward
+    # if self.prev_state is not None:
+    #   self.memory.add((self.prev_state,state,self.prev_action,self.prev_reward,done))
+    #   if done: return
+    # self.prev_state = state
+    # self.prev_action = self.actor(state).cpu().data.numpy().flatten() 
 
   def train(self, iterations, batch_size=100, discount=0.99, tau=0.005, policy_noise=0.2, noise_clip=0.5, policy_freq=2):
     

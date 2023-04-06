@@ -1,3 +1,6 @@
+import sys
+sys.path.append("e:/AI_projects/RescueAI/")
+
 import math
 import numpy as np
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
@@ -82,7 +85,7 @@ def prepare_agent_state(agent_list,target_index,state_dict,
                 result.extend(initial_state_dict[i])
 
     # Adding the flock center
-    result.extend(flock_center)
+    if flock_center is not None: result.extend(flock_center)
     return result
 
 # Discreet function to calculate the obstacle/fire intensity, given the top left point, dimensions of target area and the grid in concern.
@@ -158,10 +161,11 @@ def get_state(agent,extra_info):
     #Distance between agent and target:
     state_vec.append(eucledianDist(agent.rect.center,victimsRect.center) / extra_info['max_distance'])
     
-    #Angle of deviation from the destination:
-    # TODO: Configure this parameter properly
-    # state_vec.append(calc_deviation_angle(agent))
-    # print(f'Angle of deviation: {state_vec[-1]}')
+    # #Angle of orientation of the agent wrt X-axis:
+    # state_vec.append(agent.get_proper_angle())
+    
+    #Deviation_angle:
+    state_vec.append(calc_deviation_angle(agent))
 
     return state_vec
 
@@ -170,33 +174,47 @@ def reachedVictims(agent):
 
 # Function to calculate the angle of deviation of the agent wrt the destination
 def calc_deviation_angle(agent):
-    center = agent.rect.center
-    destination = victimsRect.center
-    
-    midpt = ((agent.rect.topleft[0]+agent.rect.topright[0])/2,
-             (agent.rect.topleft[1]+agent.rect.topright[1])/2)
-    print(f'Topleft : {agent.rect.topleft}')
-    print(f'Topright : {agent.rect.topright}')
-    print(f'midpt = {midpt}')
+    pt_1 = list(agent.rect.center)
+    pt_2 = list(victimsRect.center)
+    # Apply transformation to resemble pts in a real cartesian plane
+    pt_1[1] = height - pt_1[1]
+    pt_2[1] = height - pt_2[1]
+    dest_vec = (pt_2[0]-pt_1[0], pt_2[1]-pt_1[1])
+    # Getting the orientation angle wrt X-axis:
+    orient_angle = agent.get_proper_angle()
+    # Getting the angle made by the vector(agent_cent -> target) with X-axis
+    dest_vec_angle = angle_between_vectors(dest_vec,(1,0))
+    # Get the transformed y-cordinate (Like the usual cartesian plane):
+    pt_1[1] -= int(height / 2)
+    pt_2[1] -= int(height / 2)
+    #Check if the vector lies in the third or fourth quadrant and modify angle accordingly:
+    if pt_2[1] - pt_1[1] < 0:
+        dest_vec_angle = 360 - dest_vec_angle
 
-    # direction_vec = (midpt[0]-center[0], midpt[1]-center[1])
-    # destination_vec = (destination[0]-center[0],destination[1]-center[1])
-    # return angle_between_vectors(direction_vec,destination_vec)
-    #Getting the angle of the agent wrt the horizontal
-    player_angle = agent.get_proper_angle()
-    # Getting the destination vector wrt the agent's position
-    destination_vec = (destination[0]-center[0],destination[1]-center[1])
-    #Getting the angle of the destination vector wrt horizontal:
-    destination_angle = angle_between_vectors(destination_vec,(1,0))
-    # print(f'Destination angle: {destination_angle}, player_angle: {player_angle}')
-    rel_angle = abs(destination_angle - player_angle)
-    # print(f'Rel_angle: {rel_angle}, {360 - rel_angle}')
-    return min(rel_angle, 360-rel_angle)
+    if dest_vec_angle > orient_angle:
+        left = dest_vec_angle - orient_angle
+        right = 360 - left
+    else:
+        right = orient_angle - dest_vec_angle
+        left = 360 - right
 
-# Calculate the angle between two vectors (in degrees)
+    # print(f'From left : {left}')
+    # print(f'From right: {right}')
+
+    if right < left : return right/180
+    else: return -(left/180)
+
+# Calculate the shortest angle between two vectors (in degrees)
 def angle_between_vectors(vec_1,vec_2):
+    vec_1,vec_2 = np.array(vec_1),np.array(vec_2)
     unit_vec_1 = vec_1 / np.linalg.norm(vec_1)
     unit_vec_2 = vec_2 / np.linalg.norm(vec_2)
     cos_angle = np.dot(unit_vec_1,unit_vec_2)
     angle_radians = np.arccos(cos_angle)
     return math.degrees(angle_radians)
+
+
+if __name__ == '__main__':
+    vec_1 = [-34,54]
+    vec_2 = [1,0]
+    print(angle_between_vectors(vec_1,vec_2))

@@ -1,3 +1,6 @@
+import sys
+sys.path.append("e:/AI_projects/RescueAI/")
+
 import pygame
 from copy import deepcopy
 
@@ -17,7 +20,7 @@ class TrainingEnvironment:
         self.width = 1500
 
         self.numberOfAgents = 4
-        self.state_len = 9
+        self.state_len = 10
         self.agentModels = []
 
         self.base_velocity = 7.5
@@ -34,7 +37,7 @@ class TrainingEnvironment:
         #    Angle -> Varies from -15 to 15
         #    Velocity -> Varies from (7.5 - 2.5 = 5) to (7.5 + 2.5 = 10)
         for agent in agents:
-            self.agentModels.append(Agent(self.numberOfAgents * self.state_len + 2,
+            self.agentModels.append(Agent(self.numberOfAgents * self.state_len,
                                           2,
                                           [15,2.5],
                                           (agent[0], agent[1])
@@ -58,8 +61,10 @@ class TrainingEnvironment:
         self.agentIcon = pygame.image.load("Project/Resources/Images/agent.png")
         self.agentIcon = pygame.transform.scale(self.agentIcon,(30,30))
 
-        self.flock_center = calc_flock_center(self.agentModels)
-    
+        # self.flock_center = calc_flock_center(self.agentModels)
+        #Training specific parameters:
+        
+
     def stop(self):
 
         self.stopSimulation = True
@@ -105,7 +110,8 @@ class TrainingEnvironment:
                                                               i, 
                                                               self.state_dict, 
                                                               self.initial_state_dict,
-                                                              self.flock_center,
+                                                              None
+                                                            #   self.flock_center,
                                                               ),
                                           False
                                           )
@@ -133,33 +139,12 @@ class TrainingEnvironment:
                     
             #         if event.key == pygame.K_UP:
             #             self.perform_action(self.agentModels, 0, 0, 10)
-            #             # print(self.agentModels[0].get_proper_angle())
-            #             # print(f'Center: {self.agentModels[0].rect.center}')
-            #             # print(f'Forward_pt : {self.agentModels[0].forward_pt}')
-            #             #Testing state generation
-            #             state = get_state(self.agentModels[0],self.state_extra_info)
-            #             print(state)
-            #             print(len(state))
 
             #         if event.key == pygame.K_LEFT:
             #             self.perform_action(self.agentModels, 0, -15, 10)
-            #             # print(self.agentModels[0].get_proper_angle())
-            #             # print(f'Center: {self.agentModels[0].rect.center}')
-            #             # print(f'Forward_pt : {self.agentModels[0].forward_pt}')
-            #             #Testing state generation
-            #             state = get_state(self.agentModels[0],self.state_extra_info)
-            #             print(state)
-            #             print(len(state))
 
             #         if event.key == pygame.K_RIGHT:
             #             self.perform_action(self.agentModels, 0, 15, 10)
-            #             # print(self.agentModels[0].get_proper_angle())
-            #             # print(f'Center: {self.agentModels[0].rect.center}')
-            #             # print(f'Forward_pt : {self.agentModels[0].forward_pt}')
-            #             #Testing state generation
-            #             state = get_state(self.agentModels[0],self.state_extra_info)
-            #             print(state)
-            #             print(len(state))
             
             # # Manual Control
             # environment.blit(self.agentModels[0].shape_copy,self.agentModels[0].rect)
