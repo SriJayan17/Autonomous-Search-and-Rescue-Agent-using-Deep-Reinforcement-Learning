@@ -1,6 +1,3 @@
-import sys
-sys.path.append("e:/AI_projects/RescueAI/")
-
 import math
 import numpy as np
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
@@ -43,14 +40,20 @@ def generateReward(previous_center, current_rect, flock_center=None):
     previous_target_dist = eucledianDist(previous_center, target_pt)
     current_target_dist = eucledianDist(current_center, target_pt)
     
+    # Highly positive reward if the agent has reached the target:
+    if reachedVictims(current_rect):
+        reward += 5
+
     # Positive reward if the agent has moved towards the target
     if previous_target_dist > current_target_dist:
         reward += 1
+    else:
+        reward -= 1.5
     
     # Negative reward if the agent has flown into fire
     for fire in fireFlares:
         if(fire.colliderect(current_rect)):
-            reward -= 1.5
+            reward -= 3
     
     return reward
     
@@ -69,7 +72,7 @@ def calc_flock_center(agent_list):
 # State = own_state + neighbor_state + flock_center (precise)
 # TODO: Add a switch to toggle between training scenario and testing scenario
 def prepare_agent_state(agent_list,target_index,state_dict,
-                        initial_state_dict,flock_center,vicinity_radius=600):
+                        initial_state_dict,flock_center=None,vicinity_radius=600):
     result = []
     n = len(agent_list)
     for i in range(n):
@@ -161,16 +164,13 @@ def get_state(agent,extra_info):
     #Distance between agent and target:
     state_vec.append(eucledianDist(agent.rect.center,victimsRect.center) / extra_info['max_distance'])
     
-    # #Angle of orientation of the agent wrt X-axis:
-    # state_vec.append(agent.get_proper_angle())
-    
     #Deviation_angle:
     state_vec.append(calc_deviation_angle(agent))
 
     return state_vec
 
-def reachedVictims(agent):
-    return victimsRect.colliderect(agent.rect)
+def reachedVictims(agent_rect):
+    return victimsRect.colliderect(agent_rect)
 
 # Function to calculate the angle of deviation of the agent wrt the destination
 def calc_deviation_angle(agent):
@@ -214,7 +214,7 @@ def angle_between_vectors(vec_1,vec_2):
     return math.degrees(angle_radians)
 
 
-if __name__ == '__main__':
-    vec_1 = [-34,54]
-    vec_2 = [1,0]
-    print(angle_between_vectors(vec_1,vec_2))
+# if __name__ == '__main__':
+#     vec_1 = [-34,54]
+#     vec_2 = [1,0]
+#     print(angle_between_vectors(vec_1,vec_2))

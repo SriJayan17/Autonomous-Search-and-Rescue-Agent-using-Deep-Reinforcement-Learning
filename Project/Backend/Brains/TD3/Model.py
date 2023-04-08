@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+import os
 
 from Project.Backend.Brains.TD3.Actor import Actor
 from Project.Backend.Brains.TD3.Critic import Critic
@@ -12,38 +13,32 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class TD3(object):
   
-  def __init__(self, state_dim, action_dim, max_action_vec, mem_capacity, expl_noise=0.1):
+  def __init__(self, state_dim, action_dim, max_action_vec, mem_capacity, load, load_path):
     self.actor = Actor(state_dim, action_dim, max_action_vec).to(device)
+    self.critic = Critic(state_dim, action_dim).to(device)
+
+    if load and load_path is not None: 
+      if os.path.exists(os.path.join(os.getcwd(),load_path)):
+        self.load(load_path)
+
     self.actor_target = Actor(state_dim, action_dim, max_action_vec).to(device)
     self.actor_target.load_state_dict(self.actor.state_dict())
     self.actor_optimizer = torch.optim.Adam(self.actor.parameters())
-    self.critic = Critic(state_dim, action_dim).to(device)
+    
     self.critic_target = Critic(state_dim, action_dim).to(device)
     self.critic_target.load_state_dict(self.critic.state_dict())
     self.critic_optimizer = torch.optim.Adam(self.critic.parameters())
     self.max_action = max_action_vec
     self.memory = ReplayBuffer(mem_capacity)
-    # self.prev_reward = None
-    # self.prev_state = None 
-    # self.prev_action = None
-    self.expl_noise = expl_noise
     self.state_dim = state_dim
     self.action_dim = action_dim
 
   def select_action(self, state):
     state = torch.Tensor(state.reshape(1, -1)).to(device)
     return self.actor(state).cpu().data.numpy().flatten()
-    # self.prev_reward = prev_reward
-    # if self.prev_state is not None:
-    #   self.memory.add((self.prev_state,state,self.prev_action,self.prev_reward,done))
-    #   if done: return
-    # self.prev_state = state
-    # self.prev_action = self.actor(state).cpu().data.numpy().flatten() 
 
-  def train(self, iterations, batch_size=100, discount=0.99, tau=0.005, policy_noise=0.2, noise_clip=0.5, policy_freq=2):
-    
+  def train(self, iterations, batch_size, discount, tau, policy_noise, noise_clip, policy_freq):
     for it in range(iterations):
-      
       # Sampling records to train
       batch_states, batch_next_states, batch_actions, batch_rewards, batch_dones = self.memory.sample(batch_size)
       state = torch.Tensor(batch_states).to(device)
@@ -58,8 +53,13 @@ class TD3(object):
       # Addition of gaussian noise to a'
       noise = torch.Tensor(batch_actions).data.normal_(0, policy_noise).to(device)
       noise = noise.clamp(-noise_clip, noise_clip)
-      next_action = (next_action + noise).clamp(-self.max_action, self.max_action)
       
+      next_action = (next_action + noise)
+      upper_limit = torch.Tensor(self.max_action)
+      lower_limit = torch.Tensor([-i for i in self.max_action])
+      #Clipping the next_action tensor within the specified limits:
+      next_action = torch.max(torch.min(next_action,upper_limit),lower_limit)
+
       # The two Critic targets take each the couple (s’, a’) as input and return two Q-values Qt1(s’,a’) and Qt2(s’,a’) as outputs
       target_Q1, target_Q2 = self.critic_target(next_state, next_action)
       
@@ -95,12 +95,20 @@ class TD3(object):
         for param, target_param in zip(self.critic.parameters(), self.critic_target.parameters()):
           target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
   
+  # Adding a record in the memory:
+  def add_record(self,record):
+    self.memory.add(record)
+
   # Making a save method to save a trained model
-  def save(self, filename, directory):
-    torch.save(self.actor.state_dict(), '%s/%s_actor.pth' % (directory, filename))
-    torch.save(self.critic.state_dict(), '%s/%s_critic.pth' % (directory, filename))
+  def save(self, target_path):
+    torch.save(self.actor.state_dict(), f'{target_path}/actor.pth')
+    torch.save(self.critic.state_dict(), f'{target_path}/critic.pth')
   
   # Making a load method to load a pre-trained model
-  def load(self, filename, directory):
-    self.actor.load_state_dict(torch.load('%s/%s_actor.pth' % (directory, filename)))
-    self.critic.load_state_dict(torch.load('%s/%s_critic.pth' % (directory, filename)))
+  def load(self, target_path):
+    try:
+      self.actor.load_state_dict(torch.load( f'{target_path}/actor.pth'))
+      self.critic.load_state_dict(torch.load( f'{target_path}/critic.pth'))
+      print(f'Loaded actor and critic from: {target_path}')
+    except Exception as e:
+      return

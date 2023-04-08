@@ -56,13 +56,6 @@ fireFlares = (
     pygame.Rect(1330,25,45,45),
 )
 
-# borders = (
-#     pygame.Rect(0,20,20,height-40),
-#     pygame.Rect(0,0,width,20),
-#     pygame.Rect(width-20,20,20,height-40),
-#     pygame.Rect(0,height-20,width,20),
-# )
-
 # Width of boundaries = 20
 boundaries = (
     pygame.Rect(0,20,20,(height-40)/2-50),
@@ -77,10 +70,10 @@ boundaries = (
 
 # Tuple containing the pair of center points where the agents should be placed initially
 agents = (
-    [32,(height-40)/2],
-    [1422,(height-40)/2],
-    [(width-40)/2-33,30],
-    [(width-40)/2-33,690]
+    (32,(height-40)/2),
+    (1422,(height-40)/2),
+    ((width-40)/2-33,30),
+    ((width-40)/2-33,690)
     # pygame.Rect(50,(height-40)/2,30,30),
     # pygame.Rect(1440,(height-40)/2,30,30),
     # pygame.Rect((width-40)/2-15,30,30,30),
