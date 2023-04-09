@@ -18,10 +18,12 @@ class Agent:
         self.original_shape.set_colorkey((0,0,0))
 
         self.shape_copy = self.original_shape.copy()
+        self.previous_shape_copy = self.shape_copy.copy()
 
         self.rect = self.shape_copy.get_rect()
         self.rect.center = initial_position
-        
+        self.previous_rect = self.rect.copy()
+
         self.temp_memory = []
         self.scaler = MinMaxScaler()
         self.timer = 0
@@ -67,7 +69,9 @@ class Agent:
 
     # To move forward
     def move(self,dist=10):
-        old_center = self.rect.center
+        self.previous_rect = self.rect.copy()
+
+        old_center = tuple(self.rect.center)
         #Modifying the angle for convenience:
         ref_angle = 90 + self.angle
         ref_angle = (math.pi/180) * ref_angle
@@ -79,7 +83,8 @@ class Agent:
         
     def restore_move(self):
         self.rect.center = self.prev_center
-
+        # self.rect = self.previous_rect
+    
     def take_random_action(self):
         return [np.random.randint(-15,15), np.random.randint(-2.5,2.5)]
         

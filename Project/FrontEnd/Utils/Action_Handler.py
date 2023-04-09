@@ -8,14 +8,19 @@ from functools import reduce
 def isColliding(objects, rect):
     for object in objects:
         if object.colliderect(rect):
+            # print("collision")
             return True
     
     return False
 
 # To check if a particular move causes an agent to collide with borders, obstacles, boundaries,
 # or other agents
-def isPermissible(agent_list, index):
+def isPermissible(agent_list=[], index=0, include_borders = True):
     objects = [boundaries, obstacles]
+
+    if include_borders:
+        objects.append(borders)
+    
     objects.append((agent_list[i].rect for i in range(len(agent_list)) if i != index))
     current_rect = agent_list[index].rect
     current_rect_center = current_rect.center
@@ -25,12 +30,36 @@ def isPermissible(agent_list, index):
         if(isColliding(object, current_rect)):
             return False
 
-    #Checking if the agent has hit the borders    
-    if (current_rect_center[0] < 0 or current_rect_center[0] > width) or \
-       (current_rect_center[1] < 0 or current_rect_center[1] > height):
-        return False
+    # Checking if the agent has hit the borders    
+    # if (current_rect_center[0] < 0 or current_rect_center[0] > width) or \
+    #    (current_rect_center[1] < 0 or current_rect_center[1] > height):
+    #     return False
     
     return True
+
+def generateResuceReward(previous_center, current_rect):
+    reward = 0
+    current_center = current_rect.center
+
+    if current_center == previous_center:
+        reward -= 5
+
+    for exit in exit_points:
+        previous_target_dist = eucledianDist(previous_center, exit)
+        current_target_dist = eucledianDist(current_center, exit)
+
+        if previous_target_dist > current_target_dist:
+            reward += 0.75
+        else:
+            reward -= 0.5
+
+    if reachedExit(current_rect):
+        reward += 5
+    
+    for fire in fireFlares:
+        if(fire.colliderect(current_rect)):
+            reward -= 3
+    return reward
 
 def generateReward(previous_center, current_rect, flock_center=None):
     reward = 0
@@ -40,6 +69,9 @@ def generateReward(previous_center, current_rect, flock_center=None):
     previous_target_dist = eucledianDist(previous_center, target_pt)
     current_target_dist = eucledianDist(current_center, target_pt)
     
+    if current_center == previous_center:
+        reward -= 5
+
     # Highly positive reward if the agent has reached the target:
     if reachedVictims(current_rect):
         reward += 5
@@ -147,7 +179,7 @@ def get_sensors(target_player,target_grid,dim_x,dim_y,boundary):
     return result
 
 # Generate state for an individual agent
-def get_state(agent,extra_info):
+def get_state(agent,extra_info, destination = victimsRect):
     state_vec = []
 
     #Agent's current position:
@@ -162,20 +194,39 @@ def get_state(agent,extra_info):
     state_vec.extend(get_sensors(agent,fireGrid,extra_info['intensity_area_dim'],
                                  extra_info['intensity_area_dim'],row-height))
     #Distance between agent and target:
-    state_vec.append(eucledianDist(agent.rect.center,victimsRect.center) / extra_info['max_distance'])
+    # print(type(destination))
+    if type(destination) is tuple:
+        distances = []
+        devialtions = []
+        for item in destination:
+            distances.append(eucledianDist(agent.rect.center,item.center) / extra_info['max_distance'])
+            devialtions.append(calc_deviation_angle(agent, item))
+        
+        state_vec.extend(distances)
+        state_vec.extend(devialtions)
+
+    else:
+        state_vec.append(eucledianDist(agent.rect.center,destination.center) / extra_info['max_distance'])
+        state_vec.append(calc_deviation_angle(agent, destination))
     
     #Deviation_angle:
-    state_vec.append(calc_deviation_angle(agent))
-
     return state_vec
 
 def reachedVictims(agent_rect):
     return victimsRect.colliderect(agent_rect)
 
+def reachedExit(agent_rect):
+    for exit in exit_points:
+        if exit.colliderect(agent_rect):
+            print("exit")
+            return True
+    
+    return False
+
 # Function to calculate the angle of deviation of the agent wrt the destination
-def calc_deviation_angle(agent):
+def calc_deviation_angle(agent, destination = victimsRect):
     pt_1 = list(agent.rect.center)
-    pt_2 = list(victimsRect.center)
+    pt_2 = list(destination.center)
     # Apply transformation to resemble pts in a real cartesian plane
     pt_1[1] = height - pt_1[1]
     pt_2[1] = height - pt_2[1]

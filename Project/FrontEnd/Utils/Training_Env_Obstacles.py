@@ -68,12 +68,30 @@ boundaries = (
     pygame.Rect((width-40)/2+50,height-20,(width-40)/2+50,20),
 )
 
+exit_points = (
+    pygame.Rect((width-40)/2-50-15,0,100,20),
+    pygame.Rect((width-40)/2-50-15,height-50,100,20),
+    pygame.Rect(0, (height-40)/2-50,20,100),
+    pygame.Rect(width-50, (height-40)/2-50,20,100),
+)
+
+borders = (
+    pygame.Rect(0,0,width,20),
+    pygame.Rect(0,20,20,height),
+    pygame.Rect(width-20, 20, 20, height-20),
+    pygame.Rect(20,height-20,width-40, 20),
+)
+
 # Tuple containing the pair of center points where the agents should be placed initially
 agents = (
-    (32,(height-40)/2),
-    (1422,(height-40)/2),
-    ((width-40)/2-33,30),
-    ((width-40)/2-33,690)
+    # (32,(height-40)/2),
+    # (1422,(height-40)/2),
+    # ((width-40)/2-33,30),
+    # ((width-40)/2-33,690)
+    (50,(height-40)/2),
+    (1440,(height-40)/2),
+    ((width-40)/2-15,30),
+    ((width-40)/2-15,690),
     # pygame.Rect(50,(height-40)/2,30,30),
     # pygame.Rect(1440,(height-40)/2,30,30),
     # pygame.Rect((width-40)/2-15,30,30,30),

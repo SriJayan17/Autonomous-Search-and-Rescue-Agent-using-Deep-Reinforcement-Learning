@@ -71,7 +71,7 @@ class TrainingEnvironment:
         self.fire = pygame.transform.scale(self.fire,(fireFlares[0].width,fireFlares[0].height))
 
         self.agentIcon = pygame.image.load("Project/Resources/Images/agent.png")
-        self.agentIcon = pygame.transform.scale(self.agentIcon,(30,30))
+        self.agentIcon = pygame.transform.scale(self.agentIcon,(12, 30))
 
         self.prepare_dirs()
 
@@ -99,8 +99,9 @@ class TrainingEnvironment:
         agent.move(self.base_velocity + dist)
         if not isPermissible(agent_list, index):
             agent.restore_move()
+            # agent.turn(-turn_angle)
             self.agentRewards[index] = -4.5
-    
+
     def run(self):
 
         pygame.init()
@@ -121,7 +122,7 @@ class TrainingEnvironment:
             environment.fill((0,0,0))
 
             for boundary in boundaries:
-                pygame.draw.rect(environment, (0, 255, 0), boundary)
+                pygame.draw.rect(environment, (255, 0, 0), boundary)
 
             for obstacle in obstacles:
                 pygame.draw.rect(environment,(255, 0, 0), obstacle)
@@ -175,9 +176,11 @@ class TrainingEnvironment:
                 # Take random action in the initial 10,000 timesteps
                 if total_timesteps < random_action_limit:
                     action = self.agentModels[i].take_random_action()
+                    # action = self.getManualAction()
                 else:
                 # Take action using neural network
                     action = self.agentModels[i].take_action(self.actual_state_dict[i])
+                    # action = self.getManualAction()
                     if expl_noise != 0: # Adding noise to the predicted action
                         action = (action + np.random.normal(0, expl_noise, size=action.shape[0])).clip([-15,5], [15,10]) # Clipping the final action between the permissible range of values
                 # print(action)
@@ -185,7 +188,7 @@ class TrainingEnvironment:
                 self.action_dict[i] = action
                 # Update the current state of the individual agent
                 self.state_dict[i] = get_state(self.agentModels[i],self.state_extra_info)       
-                if self.agentRewards[i] != -2: #Action was permitted
+                if self.agentRewards[i] != -4.5: #Action was permitted
                     self.agentRewards[i] = generateReward(self.agentModels[i].prev_center, self.agentModels[i].rect)                
                 #Adding to the total episode_reward received by a single agent:
                 self.episode_rewards[i] += self.agentRewards[i]
@@ -201,26 +204,27 @@ class TrainingEnvironment:
                 # Add the record in the memory of the agent's brain:
                 self.agentModels[i].add_to_memory(prev_state,self.actual_state_dict[i],self.action_dict[i],self.agentRewards[i],done)
                 # Update the state in both the cases (Move permitted/not), because the orientation of the rectange might have changed:
-                environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)
+                environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)   
             
             episode_timesteps += 1
             total_timesteps += 1
-            # Manual Control:
-            # for event in pygame.event.get():  
+            
+            for event in pygame.event.get():  
 
-            #     if event.type == pygame.QUIT:  
-            #         self.stop()
+                if event.type == pygame.QUIT:  
+                    self.stop()
                 
-            #     if event.type == pygame.KEYDOWN:
+                # Manual Control:
+                # if event.type == pygame.KEYDOWN:
                     
-            #         if event.key == pygame.K_UP:
-            #             self.perform_action(self.agentModels, 0, 0, 10)
+                #     if event.key == pygame.K_UP:
+                #         self.perform_action(self.agentModels, 0, 0, 10)
 
-            #         if event.key == pygame.K_LEFT:
-            #             self.perform_action(self.agentModels, 0, -15, 10)
+                #     if event.key == pygame.K_LEFT:
+                #         self.perform_action(self.agentModels, 0, -15, 10)
 
-            #         if event.key == pygame.K_RIGHT:
-            #             self.perform_action(self.agentModels, 0, 15, 10)
+                #     if event.key == pygame.K_RIGHT:
+                #         self.perform_action(self.agentModels, 0, 15, 10)
             
             # # Manual Control
             # environment.blit(self.agentModels[0].shape_copy,self.agentModels[0].rect)
@@ -230,7 +234,7 @@ class TrainingEnvironment:
             # total_timesteps += 1
             if total_timesteps % 1000 == 0: print(f'Timsesteps: {total_timesteps}')
             pygame.display.flip()
-            pygame.time.delay(20)
+            # pygame.time.delay(20)
 
 
 obj = TrainingEnvironment()
