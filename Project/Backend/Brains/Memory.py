@@ -26,4 +26,5 @@ class Memory():
             batch_actions.append(np.array(action, copy=False))
             batch_rewards.append(np.array(reward, copy=False))
             batch_dones.append(np.array(done, copy=False))
+        # print(f'Batch_actions look like: {batch_actions[:2]}')
         return np.array(batch_states), np.array(batch_next_states), np.array(batch_actions), np.array(batch_rewards).reshape(-1, 1), np.array(batch_dones).reshape(-1, 1)

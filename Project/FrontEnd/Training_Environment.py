@@ -5,6 +5,7 @@ import os
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
 from Project.Backend.Agent import Agent
 from Project.FrontEnd.Utils.Action_Handler import *
+from Project.FrontEnd.Utils.Rewards import *
 
 class TrainingEnvironment:
 
@@ -18,7 +19,7 @@ class TrainingEnvironment:
         self.width = 1500
 
         self.numberOfAgents = 4
-        self.state_len = 10
+        self.state_len = 8
         self.agentModels = []
 
         self.base_velocity = 3.0
@@ -27,7 +28,7 @@ class TrainingEnvironment:
             'scale_x' : self.width,
             'scale_y' : self.height,
             'max_distance' : math.sqrt((self.width)**2 + (self.height)**2),
-            'intensity_area_dim' : 30,
+            'intensity_area_dim' : 10,
         }
 
         # Initialising the agents
@@ -35,12 +36,12 @@ class TrainingEnvironment:
         #    Angle -> Varies from -15 to 15
         #    Velocity -> Varies from (base_velocity - 2.5 = 5) to (base_velocity + 2.5 = 10)
         for i in range(self.numberOfAgents):
-            self.agentModels.append(Agent(self.numberOfAgents * self.state_len,
-                                          2,
-                                          [15,2.5],
+            self.agentModels.append(Agent(self.state_len,
+                                          1,
+                                          15,
                                           agents[i],
-                                          memory = 1000,
-                                          load = False,
+                                          memory = 1e6,
+                                          load = True,
                                           load_path = 'saved_models/agent_{i}'
                                           )
                                     )
@@ -60,6 +61,8 @@ class TrainingEnvironment:
 
         # This is to store the actions taken by the agents:
         self.action_dict = [None] * self.numberOfAgents
+        # This is to check whether the current action was permitted or not:
+        self.action_permit = [True] * self.numberOfAgents
 
         self.agentRewards = [0] * self.numberOfAgents
         self.episode_rewards = [0] * self.numberOfAgents
@@ -99,8 +102,10 @@ class TrainingEnvironment:
         agent.move(self.base_velocity + dist)
         if not isPermissible(agent_list, index):
             agent.restore_move()
+            # print('Action not permitted!')
             # agent.turn(-turn_angle)
-            self.agentRewards[index] = -4.5
+            # self.agentRewards[index] = IMPERMISSIBLE_ACTION
+            self.action_permit[index] = False
 
     def run(self):
 
@@ -110,9 +115,9 @@ class TrainingEnvironment:
 
         episode_timesteps = 0
         total_timesteps = 0
-        random_action_limit = 250
-        episode_len = 2_000
-        expl_noise = 0.1
+        random_action_limit = 500
+        episode_len = 5_000
+        expl_noise = [3,5]
         # timesteps_since_eval = 0
         episode_num = 0
         done = False 
@@ -143,7 +148,7 @@ class TrainingEnvironment:
                             self.episode_rewards[i] = 0
                         for i in range(self.numberOfAgents):
                             print(f'Training Agent_{i}')
-                            self.agentModels[i].train(iterations=20,batch_size=100)
+                            self.agentModels[i].train(iterations=episode_len,batch_size=100)
                             self.agentModels[i].save_brain(f'./saved_models/agent_{i}')
                         # agent.train(replay_buffer, episode_timesteps, batch_size, discount, tau, policy_noise, noise_clip, policy_freq)
 
@@ -179,30 +184,36 @@ class TrainingEnvironment:
                     # action = self.getManualAction()
                 else:
                 # Take action using neural network
-                    action = self.agentModels[i].take_action(self.actual_state_dict[i])
+                    action = self.agentModels[i].take_action(self.state_dict[i])
                     # action = self.getManualAction()
-                    if expl_noise != 0: # Adding noise to the predicted action
-                        action = (action + np.random.normal(0, expl_noise, size=action.shape[0])).clip([-15,5], [15,10]) # Clipping the final action between the permissible range of values
+                    if expl_noise is not None: # Adding noise to the predicted action
+                        action = (action + np.random.normal(expl_noise[0], expl_noise[1], size=action.shape[0])).clip(-15,15) # Clipping the final action between the permissible range of values
                 # print(action)
-                self.perform_action(self.agentModels, i, action[0], action[1])
+                self.perform_action(self.agentModels, i, action[0], 12)
                 self.action_dict[i] = action
-                # Update the current state of the individual agent
-                self.state_dict[i] = get_state(self.agentModels[i],self.state_extra_info)       
-                if self.agentRewards[i] != -4.5: #Action was permitted
+                # print(f'Action of agent_{i}: {action}')
+                
+                if not self.action_permit[i]: # Action not permitted
+                    self.agentRewards[i] = IMPERMISSIBLE_ACTION
+                    self.action_permit[i] = True
+                else: #Action was permitted
                     self.agentRewards[i] = generateReward(self.agentModels[i].prev_center, self.agentModels[i].rect)                
                 #Adding to the total episode_reward received by a single agent:
                 self.episode_rewards[i] += self.agentRewards[i]
                 if_reached.append(reachedVictims(self.agentModels[i].rect))
 
-            # An episode is done if the timelimeet has been reached or if any of the agents
+            # An episode is done if the timelimit has been reached or if any of the agents
             # has reached the target    
             done = done or any(if_reached)
 
             for i in range(self.numberOfAgents):
-                prev_state = self.actual_state_dict[i]
-                self.actual_state_dict[i] = prepare_agent_state(self.agentModels,i,self.state_dict,self.initial_state_dict)
+                prev_state = self.state_dict[i]
+                # Update the current state of the individual agent
+                self.state_dict[i] = get_state(self.agentModels[i],self.state_extra_info)
+                # self.actual_state_dict[i] = prepare_agent_state(self.agentModels,i,self.state_dict,self.initial_state_dict)
                 # Add the record in the memory of the agent's brain:
-                self.agentModels[i].add_to_memory(prev_state,self.actual_state_dict[i],self.action_dict[i],self.agentRewards[i],done)
+                # print(f'The action in the record tuple: {self.action_dict[i]}')
+                self.agentModels[i].add_to_memory(prev_state,self.state_dict[i],self.action_dict[i],self.agentRewards[i],done)
                 # Update the state in both the cases (Move permitted/not), because the orientation of the rectange might have changed:
                 environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)   
             
@@ -214,27 +225,29 @@ class TrainingEnvironment:
                 if event.type == pygame.QUIT:  
                     self.stop()
                 
-                # Manual Control:
-                # if event.type == pygame.KEYDOWN:
+            #     # Manual Control:
+            #     if event.type == pygame.KEYDOWN:
                     
-                #     if event.key == pygame.K_UP:
-                #         self.perform_action(self.agentModels, 0, 0, 10)
+            #         if event.key == pygame.K_UP:
+            #             self.perform_action(self.agentModels, 0, 0, 12)
+            #             get_state(self.agentModels[0],self.state_extra_info)
 
-                #     if event.key == pygame.K_LEFT:
-                #         self.perform_action(self.agentModels, 0, -15, 10)
+            #         if event.key == pygame.K_LEFT:
+            #             self.perform_action(self.agentModels, 0, -15, 12)
+            #             get_state(self.agentModels[0],self.state_extra_info)
 
-                #     if event.key == pygame.K_RIGHT:
-                #         self.perform_action(self.agentModels, 0, 15, 10)
+            #         if event.key == pygame.K_RIGHT:
+            #             self.perform_action(self.agentModels, 0, 15, 12)
+            #             get_state(self.agentModels[0],self.state_extra_info)
             
-            # # Manual Control
+            # # # Manual Control
             # environment.blit(self.agentModels[0].shape_copy,self.agentModels[0].rect)
             # if(reachedVictims(self.agentModels[0])):
             #     self.stop()
             
-            # total_timesteps += 1
             if total_timesteps % 1000 == 0: print(f'Timsesteps: {total_timesteps}')
             pygame.display.flip()
-            # pygame.time.delay(20)
+            # pygame.time.delay(10)
 
 
 obj = TrainingEnvironment()

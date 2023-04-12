@@ -15,6 +15,7 @@ class ReplayBuffer(object):
       self.storage.append(transition)
 
   def sample(self, batch_size):
+    # print(f'Memory looks like: {self.storage[:2]}')
     ind = np.random.randint(0, len(self.storage), size=batch_size)
     batch_states, batch_next_states, batch_actions, batch_rewards, batch_dones = [], [], [], [], []
     for i in ind: 

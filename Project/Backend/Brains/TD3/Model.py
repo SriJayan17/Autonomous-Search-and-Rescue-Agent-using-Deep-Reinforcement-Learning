@@ -23,11 +23,11 @@ class TD3(object):
 
     self.actor_target = Actor(state_dim, action_dim, max_action_vec).to(device)
     self.actor_target.load_state_dict(self.actor.state_dict())
-    self.actor_optimizer = torch.optim.Adam(self.actor.parameters())
+    self.actor_optimizer = torch.optim.Adam(self.actor.parameters(),lr=0.0001)
     
     self.critic_target = Critic(state_dim, action_dim).to(device)
     self.critic_target.load_state_dict(self.critic.state_dict())
-    self.critic_optimizer = torch.optim.Adam(self.critic.parameters())
+    self.critic_optimizer = torch.optim.Adam(self.critic.parameters(),lr=0.0001)
     self.max_action = max_action_vec
     self.memory = ReplayBuffer(mem_capacity)
     self.state_dim = state_dim
@@ -42,8 +42,12 @@ class TD3(object):
       # Sampling records to train
       batch_states, batch_next_states, batch_actions, batch_rewards, batch_dones = self.memory.sample(batch_size)
       state = torch.Tensor(batch_states).to(device)
+      # print(f'State: {state.shape}')
       next_state = torch.Tensor(batch_next_states).to(device)
+      # print(f'next_state = {next_state.shape}')
+      # print(f'batch_actions: {batch_actions}')
       action = torch.Tensor(batch_actions).to(device)
+      # print(f'Action: {action.shape}')
       reward = torch.Tensor(batch_rewards).to(device)
       done = torch.Tensor(batch_dones).to(device)
       
@@ -54,11 +58,11 @@ class TD3(object):
       noise = torch.Tensor(batch_actions).data.normal_(0, policy_noise).to(device)
       noise = noise.clamp(-noise_clip, noise_clip)
       
-      next_action = (next_action + noise)
-      upper_limit = torch.Tensor(self.max_action)
-      lower_limit = torch.Tensor([-i for i in self.max_action])
-      #Clipping the next_action tensor within the specified limits:
-      next_action = torch.max(torch.min(next_action,upper_limit),lower_limit)
+      next_action = (next_action + noise).clamp(-self.max_action,self.max_action)
+      # upper_limit = torch.Tensor(self.max_action)
+      # lower_limit = torch.Tensor([-i for i in self.max_action])
+      # #Clipping the next_action tensor within the specified limits:
+      # next_action = torch.max(torch.min(next_action,upper_limit),lower_limit)
 
       # The two Critic targets take each the couple (s’, a’) as input and return two Q-values Qt1(s’,a’) and Qt2(s’,a’) as outputs
       target_Q1, target_Q2 = self.critic_target(next_state, next_action)

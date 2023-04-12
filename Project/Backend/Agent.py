@@ -86,7 +86,7 @@ class Agent:
         # self.rect = self.previous_rect
     
     def take_random_action(self):
-        return [np.random.randint(-15,15), np.random.randint(-2.5,2.5)]
+        return [np.random.randint(-15,15)]
         
     def take_action(self,current_state):
         """Get the action to be taken from the agent

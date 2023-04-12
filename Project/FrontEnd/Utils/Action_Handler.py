@@ -1,9 +1,10 @@
 import math
 import numpy as np
+
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
 from Project.FrontEnd.Utils.Training_Env_Obstacles import height,width
-from functools import reduce
-
+from Project.FrontEnd.Utils.Rewards import *
+from Project.Backend.Agent import Agent
 #To check if two rectangles are colliding
 def isColliding(objects, rect):
     for object in objects:
@@ -69,24 +70,27 @@ def generateReward(previous_center, current_rect, flock_center=None):
     previous_target_dist = eucledianDist(previous_center, target_pt)
     current_target_dist = eucledianDist(current_center, target_pt)
     
-    if current_center == previous_center:
-        reward -= 5
+    reward = IMPERMISSIBLE_ACTION
 
     # Highly positive reward if the agent has reached the target:
     if reachedVictims(current_rect):
-        reward += 5
+        return REACHED_VICTIMS
 
     # Positive reward if the agent has moved towards the target
     if previous_target_dist > current_target_dist:
-        reward += 1
-    else:
-        reward -= 1.5
+        reward = TOWARDS_DESTINATION
     
     # Negative reward if the agent has flown into fire
     for fire in fireFlares:
         if(fire.colliderect(current_rect)):
-            reward -= 3
+            reward = HIT_FIRE
     
+    #Check if the agent is near borders:
+    if current_rect.centerx < 30 or (width - current_rect.centerx) < 30:
+        reward = NEAR_BORDERS
+    if current_rect.centery  < 30 or (height - current_rect.centery) < 30:
+        reward = NEAR_BORDERS
+
     return reward
     
 # To calculate euclidean distance
@@ -123,58 +127,45 @@ def prepare_agent_state(agent_list,target_index,state_dict,
     if flock_center is not None: result.extend(flock_center)
     return result
 
-# Discreet function to calculate the obstacle/fire intensity, given the top left point, dimensions of target area and the grid in concern.
-def get_sensor_output(left,top,dim_x,dim_y,boundary,grid):
-    scaling_factor = dim_x * dim_y
-    row_num = top + boundary
-    col_num = left + boundary
-    sensor_area = grid[row_num:row_num+dim_y,col_num:col_num+dim_x].copy()
-    sensor_area = sensor_area.ravel()
-    sensor_output = np.sum(sensor_area)
-    return sensor_output / float(scaling_factor)
+def move_pt(target_pt:list,angle,dist):
+    angle += 90
+    rad = math.radians(angle)
+    target_pt[0] += dist * math.cos(rad)
+    target_pt[1] -= dist * math.sin(rad)
 
-def get_sensors(target_player,target_grid,dim_x,dim_y,boundary):
-    center = target_player.rect.center
-    #Conversion of angle_track:
-    rel_angle = target_player.get_proper_angle()
-    result = []
+def get_sensor_output(x,y,dim,grid,boundary):
+    row_num = y + boundary
+    col_num = x + boundary
+    return int(np.sum(grid[int(row_num-dim):int(row_num+dim),int(col_num-dim):int(col_num+dim)]))/float((dim*2)**2)
     
-    if rel_angle == 0:
-        #Front
-        result.append(get_sensor_output(center[0]+15,center[1]-15,dim_x,dim_y,boundary,target_grid))
-        #Left
-        result.append(get_sensor_output(center[0]-15,center[1]-36,dim_x,dim_y,boundary,target_grid))
-        #Right
-        result.append(get_sensor_output(center[0]-15,center[1]+6,dim_x,dim_y,boundary,target_grid))
-    elif rel_angle == 90:
-        result.append(get_sensor_output(center[0]-15,center[1]-45,dim_x,dim_y,boundary,target_grid))
-        result.append(get_sensor_output(center[0]-36,center[1]-15,dim_x,dim_y,boundary,target_grid))
-        result.append(get_sensor_output(center[0]+6,center[1]-15,dim_x,dim_y,boundary,target_grid))
-    elif rel_angle == 180:
-        result.append(get_sensor_output(center[0]-45,center[1]-15,dim_x,dim_y,boundary,target_grid))
-        result.append(get_sensor_output(center[0]-15,center[1]+6,dim_x,dim_y,boundary,target_grid))
-        result.append(get_sensor_output(center[0]-15,center[1]-36,dim_x,dim_y,boundary,target_grid))
-    elif rel_angle == 270:
-        result.append(get_sensor_output(center[0]-15,center[1]+15,dim_x,dim_y,boundary,target_grid))
-        result.append(get_sensor_output(center[0]+6,center[1]-15,dim_x,dim_y,boundary,target_grid))
-        result.append(get_sensor_output(center[0]-36,center[1]-15,dim_x,dim_y,boundary,target_grid))
+def get_sensors(target_player:Agent,target_grid,dim,boundary):
+    result = []
+    # pt_tray = []
+    # For left sensor:
+    pt = list(target_player.rect.center)
+    if target_player.angle >=0:
+        target_angle = (target_player.angle + 40) % 360
     else:
-        if rel_angle > 0 and rel_angle < 90:
-            result.append(get_sensor_output(center[0],center[1]-30,dim_x,dim_y,boundary,target_grid))
-            result.append(get_sensor_output(center[0]-30,center[1]-30,dim_x,dim_y,boundary,target_grid))
-            result.append(get_sensor_output(center[0],center[1],dim_x,dim_y,boundary,target_grid))
-        elif rel_angle > 90 and rel_angle < 180:
-            result.append(get_sensor_output(center[0]-30,center[1]-30,dim_x,dim_y,boundary,target_grid))
-            result.append(get_sensor_output(center[0]-30,center[1],dim_x,dim_y,boundary,target_grid))
-            result.append(get_sensor_output(center[0],center[1]-30,dim_x,dim_y,boundary,target_grid))
-        elif rel_angle > 180 and rel_angle < 270:
-            result.append(get_sensor_output(center[0]-30,center[1],dim_x,dim_y,boundary,target_grid))
-            result.append(get_sensor_output(center[0],center[1],dim_x,dim_y,boundary,target_grid))
-            result.append(get_sensor_output(center[0]-30,center[1]-30,dim_x,dim_y,boundary,target_grid))
-        else:
-            result.append(get_sensor_output(center[0],center[1],dim_x,dim_y,boundary,target_grid))
-            result.append(get_sensor_output(center[0],center[1]-30,dim_x,dim_y,boundary,target_grid))
-            result.append(get_sensor_output(center[0]-30,center[1],dim_x,dim_y,boundary,target_grid))
+        target_angle = target_player.angle + 40
+    # dist = height/2 + 5(extra)
+    # Angle modificatin prior to movement is done within the function
+    move_pt(pt,target_angle,35)
+    # pt_tray.append(pt)
+    result.append(get_sensor_output(pt[0],pt[1],dim,target_grid,boundary))
+    #For forward sensor:
+    pt = list(target_player.rect.center)
+    move_pt(pt,target_player.angle,35)
+    # pt_tray.append(pt)
+    result.append(get_sensor_output(pt[0],pt[1],dim,target_grid,boundary))
+    # For right sensor:
+    pt = list(target_player.rect.center)
+    if target_player.angle <= 0:
+        target_angle = -1 * ((abs(target_player.angle) + 40) % 360)
+    else:
+        target_angle = target_player.angle - 40
+    move_pt(pt,target_angle,35)
+    # pt_tray.append(pt)
+    result.append(get_sensor_output(pt[0],pt[1],dim,target_grid,boundary))
 
     return result
 
@@ -183,16 +174,17 @@ def get_state(agent,extra_info, destination = victimsRect):
     state_vec = []
 
     #Agent's current position:
-    x = agent.rect.x / extra_info['scale_x']
-    y = agent.rect.y / extra_info['scale_y']
-    state_vec.extend([x,y])
+    # x = agent.rect.x / extra_info['scale_x']
+    # y = agent.rect.y / extra_info['scale_y']
+    # state_vec.extend([x,y])
 
     # add obstacle_density
     state_vec.extend(get_sensors(agent,obstacleGrid,extra_info['intensity_area_dim'],
-                                 extra_info['intensity_area_dim'],row-height))
+                                row-height))
+    
     # add heat_intensity
     state_vec.extend(get_sensors(agent,fireGrid,extra_info['intensity_area_dim'],
-                                 extra_info['intensity_area_dim'],row-height))
+                                 row-height))
     #Distance between agent and target:
     # print(type(destination))
     if type(destination) is tuple:
@@ -206,10 +198,12 @@ def get_state(agent,extra_info, destination = victimsRect):
         state_vec.extend(devialtions)
 
     else:
-        state_vec.append(eucledianDist(agent.rect.center,destination.center) / extra_info['max_distance'])
-        state_vec.append(calc_deviation_angle(agent, destination))
+        # state_vec.append(eucledianDist(agent.rect.center,destination.center) / extra_info['max_distance'])
+        #Deviation_angle:
+        deviation_angle = calc_deviation_angle(agent, destination)
+        state_vec.append(deviation_angle)
+        state_vec.append(-deviation_angle)
     
-    #Deviation_angle:
     return state_vec
 
 def reachedVictims(agent_rect):
