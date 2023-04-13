@@ -29,7 +29,7 @@ class TD3(object):
     self.critic_target.load_state_dict(self.critic.state_dict())
     self.critic_optimizer = torch.optim.Adam(self.critic.parameters(),lr=0.0001)
     self.max_action = max_action_vec
-    self.memory = ReplayBuffer(mem_capacity)
+    # self.memory = ReplayBuffer(mem_capacity)
     self.state_dim = state_dim
     self.action_dim = action_dim
 
@@ -37,10 +37,10 @@ class TD3(object):
     state = torch.Tensor(state.reshape(1, -1)).to(device)
     return self.actor(state).cpu().data.numpy().flatten()
 
-  def train(self, iterations, batch_size, discount, tau, policy_noise, noise_clip, policy_freq):
+  def train(self, memory, iterations, batch_size, discount, tau, policy_noise, noise_clip, policy_freq):
     for it in range(iterations):
       # Sampling records to train
-      batch_states, batch_next_states, batch_actions, batch_rewards, batch_dones = self.memory.sample(batch_size)
+      batch_states, batch_next_states, batch_actions, batch_rewards, batch_dones = memory.sample(batch_size)
       state = torch.Tensor(batch_states).to(device)
       # print(f'State: {state.shape}')
       next_state = torch.Tensor(batch_next_states).to(device)
@@ -100,8 +100,8 @@ class TD3(object):
           target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
   
   # Adding a record in the memory:
-  def add_record(self,record):
-    self.memory.add(record)
+  # def add_record(self,record):
+  #   self.memory.add(record)
 
   # Making a save method to save a trained model
   def save(self, target_path):

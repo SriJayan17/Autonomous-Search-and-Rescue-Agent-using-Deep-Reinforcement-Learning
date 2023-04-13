@@ -103,14 +103,14 @@ class Agent:
         
         return self.brain.select_action(current_state)
     
-    def train(self,iterations,batch_size=100, discount=0.99, tau=0.005, policy_noise=0.2, noise_clip=0.5, policy_freq=2):
-        self.brain.train(iterations,batch_size,discount,tau,policy_noise,noise_clip,policy_freq)
+    def train(self,memory,iterations,batch_size=100, discount=0.99, tau=0.005, policy_noise=0.2, noise_clip=0.5, policy_freq=2):
+        self.brain.train(memory,iterations,batch_size,discount,tau,policy_noise,noise_clip,policy_freq)
     
     def save_brain(self,path):
         self.brain.save(path)
     
-    def add_to_memory(self,state,next_state,action,reward,done):
-        self.brain.add_record((state,next_state,action,reward,done))
+    # def add_to_memory(self,state,next_state,action,reward,done):
+    #     self.brain.add_record((state,next_state,action,reward,done))
     # def plot_reward_metric(self):
     #     self.brain.plot_rewards()
     # def __check_and_load_brain(self):

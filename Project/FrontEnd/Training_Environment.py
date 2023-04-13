@@ -1,3 +1,6 @@
+import sys
+sys.path.append("e:/AI_projects/RescueAI/")
+
 import pygame
 from copy import deepcopy
 import os
@@ -6,6 +9,7 @@ from Project.FrontEnd.Utils.Training_Env_Obstacles import *
 from Project.Backend.Agent import Agent
 from Project.FrontEnd.Utils.Action_Handler import *
 from Project.FrontEnd.Utils.Rewards import *
+from Project.Backend.Brains.TD3.Memory import ReplayBuffer
 
 class TrainingEnvironment:
 
@@ -31,6 +35,7 @@ class TrainingEnvironment:
             'intensity_area_dim' : 10,
         }
 
+        self.memory = ReplayBuffer()
         # Initialising the agents
         # Action limit:
         #    Angle -> Varies from -15 to 15
@@ -41,7 +46,7 @@ class TrainingEnvironment:
                                           15,
                                           agents[i],
                                           memory = 1e6,
-                                          load = True,
+                                          load = False,
                                           load_path = 'saved_models/agent_{i}'
                                           )
                                     )
@@ -148,7 +153,7 @@ class TrainingEnvironment:
                             self.episode_rewards[i] = 0
                         for i in range(self.numberOfAgents):
                             print(f'Training Agent_{i}')
-                            self.agentModels[i].train(iterations=episode_len,batch_size=100)
+                            self.agentModels[i].train(memory=self.memory,iterations=episode_len,batch_size=100)
                             self.agentModels[i].save_brain(f'./saved_models/agent_{i}')
                         # agent.train(replay_buffer, episode_timesteps, batch_size, discount, tau, policy_noise, noise_clip, policy_freq)
 
@@ -200,22 +205,25 @@ class TrainingEnvironment:
                     self.agentRewards[i] = generateReward(self.agentModels[i].prev_center, self.agentModels[i].rect)                
                 #Adding to the total episode_reward received by a single agent:
                 self.episode_rewards[i] += self.agentRewards[i]
-                if_reached.append(reachedVictims(self.agentModels[i].rect))
+                
+                #Storing the record in memory:
+                prev_state = self.state_dict[i]
+                  # Update the current state of the individual agent
+                  # Update the state in both the cases (Move permitted/not), because the orientation of the rectange might have changed:
+                self.state_dict[i] = get_state(self.agentModels[i],self.state_extra_info)
+                  # Checking if the agent has reached
+                reached = reachedVictims(self.agentModels[i].rect)
+                  # Add the record in the common memory:
+                self.memory.add((prev_state,self.state_dict[i],self.action_dict[i],self.agentRewards[i],reached))
+                
+                environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)
+
+                if_reached[i] = reached
 
             # An episode is done if the timelimit has been reached or if any of the agents
             # has reached the target    
             done = done or any(if_reached)
-
-            for i in range(self.numberOfAgents):
-                prev_state = self.state_dict[i]
-                # Update the current state of the individual agent
-                self.state_dict[i] = get_state(self.agentModels[i],self.state_extra_info)
-                # self.actual_state_dict[i] = prepare_agent_state(self.agentModels,i,self.state_dict,self.initial_state_dict)
-                # Add the record in the memory of the agent's brain:
-                # print(f'The action in the record tuple: {self.action_dict[i]}')
-                self.agentModels[i].add_to_memory(prev_state,self.state_dict[i],self.action_dict[i],self.agentRewards[i],done)
-                # Update the state in both the cases (Move permitted/not), because the orientation of the rectange might have changed:
-                environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)   
+                   
             
             episode_timesteps += 1
             total_timesteps += 1
