@@ -4,7 +4,6 @@ import os
 
 from Project.Backend.Brains.TD3.Actor import Actor
 from Project.Backend.Brains.TD3.Critic import Critic
-from Project.Backend.Brains.TD3.Memory import ReplayBuffer
 
 # Selecting the device (CPU or GPU)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -18,7 +17,7 @@ class TD3(object):
     self.critic = Critic(state_dim, action_dim).to(device)
 
     if load and load_path is not None: 
-      if os.path.exists(os.path.join(os.getcwd(),load_path)):
+      if os.path.exists(load_path):
         self.load(load_path)
 
     self.actor_target = Actor(state_dim, action_dim, max_action_vec).to(device)
