@@ -3,6 +3,7 @@ import pygame
 from copy import deepcopy
 import os
 from Project.Backend.Brains.TD3.Memory import ReplayBuffer
+from Project.FrontEnd.Utils.EpsiodeRewardsGrapher import plot
 
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
 from Project.Backend.Agent import Agent
@@ -38,6 +39,7 @@ class TrainingEnvironment:
             'intensity_area_dim' : 10,
         }
         self.memory = ReplayBuffer()
+        self.agent_episode_reward = [[]]
         
         # Initialising the agents
         # Action limit:
@@ -131,16 +133,17 @@ class TrainingEnvironment:
             if done:
                 # If we are not at the very beginning, we start the training process of the model
                 if total_timesteps != 0:
-                        print(f'Total Timesteps: {total_timesteps} Episode Num: {episode_num}')
-                        print('Total reward obtained by the agents:')                    
-                        print(f'Agent: {self.episode_rewards}')
-                        self.episode_rewards = 0
+                    self.agent_episode_reward[0].append(self.episode_rewards)
+                    print(f'Total Timesteps: {total_timesteps} Episode Num: {episode_num}')
+                    print('Total reward obtained by the agents:')                    
+                    print(f'Agent: {self.episode_rewards}')
+                    self.episode_rewards = 0
 
-                        displayPrompt("Training Agent")
-                        print(f'Training Agent')
-                        self.agentModel.train(memory=self.memory,iterations=episode_timesteps,batch_size=500)
-                        self.agentModel.save_brain(f'./saved_models/rescue_agent')
-                        # agent.train(replay_buffer, episode_timesteps, batch_size, discount, tau, policy_noise, noise_clip, policy_freq)
+                    displayPrompt("Training Agent")
+                    print(f'Training Agent')
+                    self.agentModel.train(memory=self.memory,iterations=episode_timesteps,batch_size=500)
+                    self.agentModel.save_brain(f'./saved_models/rescue_agent')
+                    # agent.train(replay_buffer, episode_timesteps, batch_size, discount, tau, policy_noise, noise_clip, policy_freq)
 
             # We evaluate the episode and we save the policy
             # if timesteps_since_eval >= eval_freq:
@@ -215,6 +218,7 @@ class TrainingEnvironment:
             for event in pygame.event.get():  
 
                 if event.type == pygame.QUIT:  
+                    plot(self.agent_episode_reward)
                     self.stop()
                 
                 if event.type == pygame.KEYDOWN:

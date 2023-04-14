@@ -246,14 +246,13 @@ class TrainingEnvironment:
             # has reached the target    
             done = done or any(if_reached)
                    
-            
             episode_timesteps += 1
             total_timesteps += 1
             
             for event in pygame.event.get():  
 
                 if event.type == pygame.QUIT:  
-                    plot(self.agents_episode_rewards)
+                    plot(self.agents_episode_rewards, self.numberOfAgents)
                     self.stop()
                 
             #     # Manual Control:
