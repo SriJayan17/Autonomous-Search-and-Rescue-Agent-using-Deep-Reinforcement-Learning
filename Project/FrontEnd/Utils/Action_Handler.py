@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from tkinter import *
 
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
 from Project.FrontEnd.Utils.Training_Env_Obstacles import height,width
@@ -258,6 +259,17 @@ def angle_between_vectors(vec_1,vec_2):
     angle_radians = np.arccos(cos_angle)
     return math.degrees(angle_radians)
 
+
+def displayPrompt(prompt):
+    root = Tk()
+    root.withdraw()
+    popup = Toplevel()
+    popup.title("Prompt")
+    msg = Label(popup,text=prompt)
+    popup.geometry("150x40+655+300")
+    msg.pack()
+    root.after(1000,lambda:root.destroy())
+    popup.mainloop()
 
 # if __name__ == '__main__':
 #     vec_1 = [-34,54]

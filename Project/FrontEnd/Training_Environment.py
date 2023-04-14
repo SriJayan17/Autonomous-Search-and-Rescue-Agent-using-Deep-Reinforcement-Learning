@@ -4,6 +4,7 @@ import os
 import random
 
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
+from Project.FrontEnd.Utils.EpsiodeRewardsGrapher import *
 from Project.Backend.Agent import Agent
 from Project.FrontEnd.Utils.Action_Handler import *
 from Project.FrontEnd.Utils.Rewards import *
@@ -23,6 +24,8 @@ class TrainingEnvironment:
         self.numberOfAgents = 4
         self.state_len = 8
         self.agentModels = []
+
+        self.agents_episode_rewards = [[] for _ in range(self.numberOfAgents)]
 
         self.base_velocity = 3.0
 
@@ -144,9 +147,12 @@ class TrainingEnvironment:
                         print(f'Total no.of determinisitic actions: {deter_count}')
                         print('Total reward obtained by the agents:')
                         for i in range(self.numberOfAgents):
+                            self.agents_episode_rewards[i].append(self.episode_rewards[i])
                             print(f'Agent_{i}: {self.episode_rewards[i]}')
                             self.episode_rewards[i] = 0
+                        popup = None
                         for i in range(self.numberOfAgents):
+                            displayPrompt("Training Agent : "+str(i+1))
                             print(f'Training Agent_{i}')
                             self.agentModels[i].train(memory=self.memory,iterations=episode_timesteps,batch_size=500)
                             self.agentModels[i].save_brain(f'./saved_models/agent_{i}')
@@ -247,6 +253,7 @@ class TrainingEnvironment:
             for event in pygame.event.get():  
 
                 if event.type == pygame.QUIT:  
+                    plot(self.agents_episode_rewards)
                     self.stop()
                 
             #     # Manual Control:

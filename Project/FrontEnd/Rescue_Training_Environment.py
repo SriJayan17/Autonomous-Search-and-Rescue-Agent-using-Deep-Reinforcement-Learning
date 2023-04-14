@@ -1,6 +1,8 @@
+import random
 import pygame
 from copy import deepcopy
 import os
+from Project.Backend.Brains.TD3.Memory import ReplayBuffer
 
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
 from Project.Backend.Agent import Agent
@@ -17,14 +19,14 @@ class TrainingEnvironment:
         self.height = 750
         self.width = 1500
 
-        self.state_len = 16
+        self.state_len = 14
         self.agentModel = Agent(self.state_len,
-                                2,
-                                [15,2.5],
+                                1,
+                                15,
                                 (victimsRect.x, victimsRect.y),
-                                memory = 1000,
+                                memory = 1e6,
                                 load = False,
-                                load_path = 'saved_models/agent_{i}'
+                                load_path = 'saved_models/rescue_agent'
                                 )
 
         self.base_velocity = 3.0
@@ -33,9 +35,10 @@ class TrainingEnvironment:
             'scale_x' : self.width,
             'scale_y' : self.height,
             'max_distance' : math.sqrt((self.width)**2 + (self.height)**2),
-            'intensity_area_dim' : 30,
+            'intensity_area_dim' : 10,
         }
-
+        self.memory = ReplayBuffer()
+        
         # Initialising the agents
         # Action limit:
         #    Angle -> Varies from -15 to 15
@@ -50,6 +53,7 @@ class TrainingEnvironment:
         
         # This is to store the actions taken by the agents:
         self.action_dict = None
+        self.action_permit = True
 
         self.agentRewards = 0
         self.episode_rewards = 0
@@ -70,25 +74,22 @@ class TrainingEnvironment:
     #Preparing the directories required to store the outputs:
     def prepare_dirs(self):
         cwd = os.getcwd()
-        # print(os.path.isdir(os.path.join(cwd,"results")))
-        # if not os.path.isdir("results"):
-        #     # os.makedirs("./results")
-        #     for i in range(self.numberOfAgents):
-        #         os.makedirs(f'results/agent_{i}')
         if not os.path.isdir(os.path.join(cwd,"saved_models")):
-            # os.makedirs("./pytorch_models")
             os.makedirs(f'saved_models/rescue_agent')
 
     def stop(self):
         self.stopSimulation = True
     
-    def perform_action(self,agent,turn_angle,dist):
+    def perform_action(self, agent, turn_angle,dist):
         if turn_angle != 0: agent.turn(turn_angle)
         agent.move(self.base_velocity + dist)
-        if not isPermissible([self.agentModel], 0, include_borders=False):
+        if not isPermissible([agent]):
             agent.restore_move()
+            # print('Action not permitted!')
             # agent.turn(-turn_angle)
-            self.agentRewards = -4.5
+            # self.agentRewards[index] = IMPERMISSIBLE_ACTION
+            self.action_permit = False
+
 
     def run(self):
 
@@ -98,12 +99,15 @@ class TrainingEnvironment:
 
         episode_timesteps = 0
         total_timesteps = 0
-        random_action_limit = 250
-        episode_len = 2_000
-        expl_noise = 0.1
+        random_action_limit = 1000
+        episode_len = 10_000
+        expl_noise = [3,5]
+        expl_prob = 0.2
+        deter_count = 0
         # timesteps_since_eval = 0
         episode_num = 0
         done = False 
+        
         
         while not self.stopSimulation:
 
@@ -132,8 +136,9 @@ class TrainingEnvironment:
                         print(f'Agent: {self.episode_rewards}')
                         self.episode_rewards = 0
 
+                        displayPrompt("Training Agent")
                         print(f'Training Agent')
-                        self.agentModel.train(iterations=20,batch_size=100)
+                        self.agentModel.train(memory=self.memory,iterations=episode_timesteps,batch_size=500)
                         self.agentModel.save_brain(f'./saved_models/rescue_agent')
                         # agent.train(replay_buffer, episode_timesteps, batch_size, discount, tau, policy_noise, noise_clip, policy_freq)
 
@@ -170,31 +175,39 @@ class TrainingEnvironment:
                 action = self.agentModel.take_action(self.state_dict)
                 # action = self.getManualAction()
                 if expl_noise != 0: # Adding noise to the predicted action
-                    action = (action + np.random.normal(0, expl_noise, size=action.shape[0])).clip([-15,5], [15,10]) # Clipping the final action between the permissible range of values
+                    action = (action + random.uniform(expl_noise[0], expl_noise[1])).clip(-15,15) 
+                    # Clipping the final action between the permissible range of values
             # print(action)
-            self.perform_action(self.agentModel, action[0], action[1])
+            self.perform_action(self.agentModel, action[0], 12)
             self.action_dict = action
-            # Update the current state of the individual agent
-            self.state_dict = get_state(self.agentModel,self.state_extra_info, destination=exit_points)       
-            if self.agentRewards != -4.5: #Action was permitted
-                self.agentRewards = generateResuceReward(self.agentModel.prev_center, self.agentModel.rect)                
+
+            if not self.action_permit: # Action not permitted
+                self.agentReward = IMPERMISSIBLE_ACTION
+                self.action_permit = True
+            else: #Action was permitted
+                self.agentRewards = generateReward(self.agentModel.prev_center, self.agentModel.rect)                
+
             #Adding to the total episode_reward received by a single agent:
             self.episode_rewards += self.agentRewards
-            if_reached = reachedExit(self.agentModel.rect)
 
-            # An episode is done if the timelimeet has been reached or if any of the agents
-            # has reached the target    
-            done = done or if_reached
-
+            # Update the current state of the individual agent
             prev_state = self.state_dict
             self.state_dict = get_state(self.agentModel,self.state_extra_info, destination=exit_points)       
+
+            if_reached = reachedExit(self.agentModel.rect)
+
+
             # Add the record in the memory of the agent's brain:
-            self.agentModel.add_to_memory(prev_state,self.state_dict,self.action_dict,self.agentRewards,done)
+            self.memory.add((prev_state,self.state_dict,self.action_dict,self.agentRewards,if_reached))
+
             # Update the state in both the cases (Move permitted/not), because the orientation of the rectange might have changed:
             environment.blit(self.agentModel.shape_copy,self.agentModel.rect)   
             environment.blit(self.victims, (self.agentModel.rect.x+10, self.agentModel.rect.y+10))
             
-            
+            # An episode is done if the timelimeet has been reached or if any of the agents
+            # has reached the target    
+            done = done or if_reached
+
             episode_timesteps += 1
             total_timesteps += 1
             
