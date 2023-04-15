@@ -1,10 +1,12 @@
+import sys
+sys.path.append("e:/AI_projects/RescueAI/")
+
 import random
 import pygame
-from copy import deepcopy
 import os
-from Project.Backend.Brains.TD3.Memory import ReplayBuffer
-from Project.FrontEnd.Utils.EpsiodeRewardsGrapher import plot
 
+from Project.Backend.Brains.TD3.Memory import ReplayBuffer
+from Project.FrontEnd.Utils.Grapher import *
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
 from Project.Backend.Agent import Agent
 from Project.FrontEnd.Utils.Action_Handler import *
@@ -101,13 +103,13 @@ class TrainingEnvironment:
 
         episode_timesteps = 0
         total_timesteps = 0
-        random_action_limit = 1000
-        episode_len = 10_000
+        random_action_limit = 100
+        episode_len = 1_000
         expl_noise = [3,5]
         expl_prob = 0.2
         deter_count = 0
         # timesteps_since_eval = 0
-        episode_num = 0
+        episode_num = 1
         done = False 
         
         
@@ -218,7 +220,10 @@ class TrainingEnvironment:
             for event in pygame.event.get():  
 
                 if event.type == pygame.QUIT:  
-                    plot(self.agent_episode_reward)
+                    if episode_num >= 3:
+                        plot_rewards(self.agent_episode_reward)
+                        # plot_reach_time()
+                        
                     self.stop()
                 
                 if event.type == pygame.KEYDOWN:

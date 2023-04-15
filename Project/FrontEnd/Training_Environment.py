@@ -4,7 +4,7 @@ import os
 import random
 
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
-from Project.FrontEnd.Utils.EpsiodeRewardsGrapher import *
+from Project.FrontEnd.Utils.Grapher import *
 from Project.Backend.Agent import Agent
 from Project.FrontEnd.Utils.Action_Handler import *
 from Project.FrontEnd.Utils.Rewards import *
@@ -26,6 +26,7 @@ class TrainingEnvironment:
         self.agentModels = []
 
         self.agents_episode_rewards = [[] for _ in range(self.numberOfAgents)]
+        self.reach_time = []
 
         self.base_velocity = 3.0
 
@@ -89,6 +90,8 @@ class TrainingEnvironment:
     #Preparing the directories required to store the outputs:
     def prepare_dirs(self):
         cwd = os.getcwd()
+        if not os.path.isdir(os.path.join(cwd,"Graphs")):
+            os.makedirs('Graphs')
         if not os.path.isdir(os.path.join(cwd,"saved_models")):
             for i in range(self.numberOfAgents):
                 os.makedirs(f'saved_models/agent_{i}')
@@ -115,13 +118,11 @@ class TrainingEnvironment:
 
         episode_timesteps = 0
         total_timesteps = 0
-        random_action_limit = 1000
-        episode_len = 10_000
+        random_action_limit = 50
+        episode_len = 5_00
         expl_noise = [3,5]
-        expl_prob = 0.2
-        deter_count = 0
         # timesteps_since_eval = 0
-        episode_num = 0
+        episode_num = 1
         done = False 
         
         while not self.stopSimulation:
@@ -144,7 +145,6 @@ class TrainingEnvironment:
                 # If we are not at the very beginning, we start the training process of the model
                 if total_timesteps != 0:
                         print(f'Total Timesteps: {total_timesteps} Episode Num: {episode_num}')
-                        print(f'Total no.of determinisitic actions: {deter_count}')
                         print('Total reward obtained by the agents:')
                         for i in range(self.numberOfAgents):
                             self.agents_episode_rewards[i].append(self.episode_rewards[i])
@@ -158,12 +158,6 @@ class TrainingEnvironment:
                             self.agentModels[i].save_brain(f'./saved_models/agent_{i}')
                         # agent.train(replay_buffer, episode_timesteps, batch_size, discount, tau, policy_noise, noise_clip, policy_freq)
 
-            # We evaluate the episode and we save the policy
-            # if timesteps_since_eval >= eval_freq:
-            #     timesteps_since_eval %= eval_freq
-            #     evaluations.append(evaluate_policy(policy))
-            #     np.save("./results/%s" % (file_name), evaluations)
-        
                 # When the training step is done, we reset the state of the environment
                 for i in range(self.numberOfAgents):
                     self.agentModels[i].rect.center = agents[i]
@@ -173,9 +167,9 @@ class TrainingEnvironment:
                 # Set the Done to False
                 done = False
                 
+                self.reach_time.append(episode_timesteps)
                 # Set rewards and episode timesteps to zero
                 episode_timesteps = 0
-                deter_count = 0
                 episode_num += 1    
 
             # Last run of the episode.
@@ -190,27 +184,6 @@ class TrainingEnvironment:
                     action = self.agentModels[i].take_random_action()
                     # action = self.getManualAction()
                 else:
-                    # action = self.getManualAction()
-                    # Take a deterministic action:
-                    # if random.random() <= 0.2:
-                    #     deter_count += 1
-                    #     state = self.state_dict[i]
-                    #     action = random.uniform(12,15)
-                    #     #Checking if there is no fire around:
-                    #     if state[3] == 0 and state[4] == 0 and state[5] == 0:
-                    #         # Turn based on the obstacle density:
-                    #         if state[0] <= state[1] and state[0] <= state[2]:
-                    #             action *= -1
-                    #         elif state[1] <= state[0] and state[1] <= state[2]:
-                    #             action = 0
-                    #     else: # There is fire around, so turn accordingly:
-                    #         if state[3] <= state[4] and state[3] <= state[5]:
-                    #             action *= -1
-                    #         elif state[4] <= state[3] and state[4] <= state[5]:
-                    #             action = 0
-                    #     action = [action]
-                    # # Take action using neural network
-                    # else:
                     action = self.agentModels[i].take_action(self.state_dict[i])
 
                     if expl_noise is not None: # Adding noise to the predicted action
@@ -252,7 +225,11 @@ class TrainingEnvironment:
             for event in pygame.event.get():  
 
                 if event.type == pygame.QUIT:  
-                    plot(self.agents_episode_rewards, self.numberOfAgents)
+                    if episode_num >= 3:
+                        #Plots the rewards obtained by the agents wrt episode
+                        plot_rewards(self.agents_episode_rewards)
+                        # Plots the time taken to reach the victims wrt episodes
+                        plot_reach_time(self.reach_time,'Time taken to reach the victims')
                     self.stop()
                 
             #     # Manual Control:
