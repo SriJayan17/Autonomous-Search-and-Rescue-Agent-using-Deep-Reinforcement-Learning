@@ -102,6 +102,13 @@ victimsRect = pygame.Rect(880,230,50,50)
 obstacleGrid = np.zeros((row,cols))
 fireGrid = np.zeros((row,cols))
 
+helper_agents = (
+    (400,(height)/2),
+    (1070,(height)/2),
+    (700,(height-80))
+)
+
+
 # Making the borders opaque
 obstacleGrid[:30,:] = 1
 obstacleGrid[row-30:,:] = 1

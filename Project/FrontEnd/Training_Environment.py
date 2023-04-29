@@ -1,7 +1,11 @@
+import sys
+sys.path.append("e:/AI_projects/RescueAI/")
+
 import pygame
 from copy import deepcopy
 import os
 import random
+import pickle
 
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
 from Project.FrontEnd.Utils.Grapher import *
@@ -55,16 +59,16 @@ class TrainingEnvironment:
 
         #This is to store the current state of an individual agent   
         self.state_dict = [None] * self.numberOfAgents
-        # This is to store the actual state(combined) that we pass into the neural network
-        # when taking decision, this is needed to create the records to train the agent. 
-        self.actual_state_dict = [None] * self.numberOfAgents
+        
+        #This is to store the travel record of the agents, to trace back during rescue operation:
+        self.travel_history = [[]] * self.numberOfAgents
 
         for i in range(self.numberOfAgents):
             self.state_dict[i] = get_state(self.agentModels[i],self.state_extra_info)
         self.initial_state_dict = deepcopy(self.state_dict)
         
-        for i in range(self.numberOfAgents):
-            self.actual_state_dict[i] = prepare_agent_state(self.agentModels,i,self.state_dict,self.state_dict)  
+        # for i in range(self.numberOfAgents):
+        #     self.actual_state_dict[i] = prepare_agent_state(self.agentModels,i,self.state_dict,self.state_dict)  
 
         # This is to store the actions taken by the agents:
         self.action_dict = [None] * self.numberOfAgents
@@ -92,6 +96,8 @@ class TrainingEnvironment:
         cwd = os.getcwd()
         if not os.path.isdir(os.path.join(cwd,"Graphs")):
             os.makedirs('Graphs')
+        if not os.path.isdir(os.path.join(cwd,"Rescue_plan")):
+            os.makedirs('Rescue_plan')
         if not os.path.isdir(os.path.join(cwd,"saved_models")):
             for i in range(self.numberOfAgents):
                 os.makedirs(f'saved_models/agent_{i}')
@@ -118,10 +124,14 @@ class TrainingEnvironment:
 
         episode_timesteps = 0
         total_timesteps = 0
-        random_action_limit = 50
-        episode_len = 5_00
+        random_action_limit = 500
+        episode_len = 5_000
         expl_noise = [3,5]
         # timesteps_since_eval = 0
+        min_reach_time = episode_len + 1
+        min_reach_travel_history = None
+        reach_path_modified = False
+
         episode_num = 1
         done = False 
         
@@ -142,6 +152,13 @@ class TrainingEnvironment:
             
             # An episode is over
             if done:
+                #Check and Save the rescue path:
+                if reach_path_modified:
+                    with open('Rescue_plan/path_trace.pickle','wb') as outfile:
+                        pickle.dump(min_reach_travel_history,outfile)
+                        print('Saved the rescue path')
+                        reach_path_modified = False
+                        
                 # If we are not at the very beginning, we start the training process of the model
                 if total_timesteps != 0:
                         print(f'Total Timesteps: {total_timesteps} Episode Num: {episode_num}')
@@ -157,11 +174,12 @@ class TrainingEnvironment:
                             self.agentModels[i].train(memory=self.memory,iterations=episode_timesteps,batch_size=500)
                             self.agentModels[i].save_brain(f'./saved_models/agent_{i}')
                         # agent.train(replay_buffer, episode_timesteps, batch_size, discount, tau, policy_noise, noise_clip, policy_freq)
-
-                # When the training step is done, we reset the state of the environment
+                # When the training step is done, we reset the state of the environment as well as the travel history 
                 for i in range(self.numberOfAgents):
                     self.agentModels[i].rect.center = agents[i]
-                    environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)    
+                    environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)
+
+                    self.travel_history[i].clear()    
                 # obs = env.reset()
         
                 # Set the Done to False
@@ -197,6 +215,8 @@ class TrainingEnvironment:
                     self.agentRewards[i] = IMPERMISSIBLE_ACTION
                     self.action_permit[i] = True
                 else: #Action was permitted
+                    # Keeping track of the permitted actions alone:
+                    self.travel_history[i].append(action)
                     self.agentRewards[i] = generateReward(self.agentModels[i].prev_center, self.agentModels[i].rect)                
                 #Adding to the total episode_reward received by a single agent:
                 self.episode_rewards[i] += self.agentRewards[i]
@@ -208,6 +228,16 @@ class TrainingEnvironment:
                 self.state_dict[i] = get_state(self.agentModels[i],self.state_extra_info)
                   # Checking if the agent has reached
                 reached = reachedVictims(self.agentModels[i].rect)
+                    # If reached, check if this is the minimum time taken to reach.
+                    # If yes, store the path_trace of that agent to use for rescue
+                if reached and episode_timesteps < min_reach_time:
+                    min_reach_time = episode_timesteps
+                    min_reach_travel_history = deepcopy(self.travel_history[i])
+                    target_angle = (self.agentModels[i].get_proper_angle() + 180) % 360
+                    # Store the target angle as the last value of the trace_back list
+                    min_reach_travel_history.append(target_angle)
+                    reach_path_modified = True
+                    print('New time record achieved!')
                   # Add the record in the common memory:
                 self.memory.add((prev_state,self.state_dict[i],self.action_dict[i],self.agentRewards[i],reached))
                 

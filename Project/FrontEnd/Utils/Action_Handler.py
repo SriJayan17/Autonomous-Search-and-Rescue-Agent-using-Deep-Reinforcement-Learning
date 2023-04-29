@@ -39,34 +39,41 @@ def isPermissible(agent_list=[], index=0, include_borders = True):
     
     return True
 
-def generateResuceReward(previous_center, current_rect):
+def generateRescueReward(previous_center, current_rect):
     reward = 0
     current_center = current_rect.center
 
     if current_center == previous_center:
-        reward -= 5
+        reward = AWAY_FROM_DESTINATION
 
-    for exit in exit_points:
-        previous_target_dist = eucledianDist(previous_center, exit)
-        current_target_dist = eucledianDist(current_center, exit)
-
-        if previous_target_dist > current_target_dist:
-            reward += 0.75
-        else:
-            reward -= 0.5
+    prev_min_dist = 1e6
+    prev_target = None
+    for exit_pt in exit_points:
+        prev_dist = eucledianDist(previous_center, exit_pt)
+        if prev_dist < prev_min_dist: 
+            prev_min_dist = prev_dist
+            prev_target = exit_pt
+    current_dist = eucledianDist(current_center, prev_target)
+        # if current_dist < current_min_dist: current_min_dist = current_dist
+    if prev_min_dist > current_dist:
+        # print(f'prev_min: {prev_min_dist}, current_dist: {current_dist}')
+        reward = TOWARDS_DESTINATION
+    else:
+        reward = AWAY_FROM_DESTINATION
 
     if reachedExit(current_rect):
-        reward += 5
+        return REACHED_VICTIMS
     
     for fire in fireFlares:
         if(fire.colliderect(current_rect)):
-            reward -= 3
+            reward = HIT_FIRE
+
     return reward
 
-def generateReward(previous_center, current_rect, flock_center=None):
+def generateReward(previous_center, current_rect, rescue_op=False, nearest_exit:pygame.Rect=None):
     reward = 0
     current_center = current_rect.center
-    target_pt = victimsRect.center
+    target_pt = nearest_exit.center if rescue_op else victimsRect.center
 
     previous_target_dist = eucledianDist(previous_center, target_pt)
     current_target_dist = eucledianDist(current_center, target_pt)
@@ -108,25 +115,25 @@ def calc_flock_center(agent_list):
 # Generating the agent state that is has to be fed into the neural network to make decisions
 # State = own_state + neighbor_state + flock_center (precise)
 # TODO: Add a switch to toggle between training scenario and testing scenario
-def prepare_agent_state(agent_list,target_index,state_dict,
-                        initial_state_dict,flock_center=None,vicinity_radius=600):
-    result = []
-    n = len(agent_list)
-    for i in range(n):
-        if i == target_index:
-            result.extend(state_dict[i])
-        else:
-            target_agent = agent_list[target_index]
-            distance = eucledianDist((target_agent.rect.x, target_agent.rect.y),
-                                     (agent_list[i].rect.x,agent_list[i].rect.y))
-            if distance <= vicinity_radius:
-                result.extend(state_dict[i])
-            else:
-                result.extend(initial_state_dict[i])
+# def prepare_agent_state(agent_list,target_index,state_dict,
+#                         initial_state_dict,flock_center=None,vicinity_radius=600):
+#     result = []
+#     n = len(agent_list)
+#     for i in range(n):
+#         if i == target_index:
+#             result.extend(state_dict[i])
+#         else:
+#             target_agent = agent_list[target_index]
+#             distance = eucledianDist((target_agent.rect.x, target_agent.rect.y),
+#                                      (agent_list[i].rect.x,agent_list[i].rect.y))
+#             if distance <= vicinity_radius:
+#                 result.extend(state_dict[i])
+#             else:
+#                 result.extend(initial_state_dict[i])
 
-    # Adding the flock center
-    if flock_center is not None: result.extend(flock_center)
-    return result
+#     # Adding the flock center
+#     if flock_center is not None: result.extend(flock_center)
+#     return result
 
 def move_pt(target_pt:list,angle,dist):
     angle += 90
@@ -172,12 +179,11 @@ def get_sensors(target_player:Agent,target_grid,dim,boundary):
 
 # Generate state for an individual agent
 def get_state(agent,extra_info, destination = victimsRect):
+    """
+    For search training, state_len = 8
+    For rescue training, state_len = 8 
+    """
     state_vec = []
-
-    #Agent's current position:
-    # x = agent.rect.x / extra_info['scale_x']
-    # y = agent.rect.y / extra_info['scale_y']
-    # state_vec.extend([x,y])
 
     # add obstacle_density
     state_vec.extend(get_sensors(agent,obstacleGrid,extra_info['intensity_area_dim'],
@@ -188,22 +194,28 @@ def get_state(agent,extra_info, destination = victimsRect):
                                  row-height))
     #Distance between agent and target:
     # print(type(destination))
-    if type(destination) is tuple:
-        distances = []
-        devialtions = []
-        for item in destination:
-            distances.append(eucledianDist(agent.rect.center,item.center) / extra_info['max_distance'])
-            devialtions.append(calc_deviation_angle(agent, item))
+    # if type(destination) is tuple:
+    #     # distances = []
+    #     min_dist = 1e6
+    #     target_destination = None
+    #     deviations = []
+    #     for item in destination:
+    #         dist = eucledianDist(agent.rect.center,item.center)
+    #         if dist < min_dist:
+    #             min_dist = dist
+    #             target_destination = item
         
-        state_vec.extend(distances)
-        state_vec.extend(devialtions)
 
-    else:
+    #     deviation_angle = calc_deviation_angle(agent, target_destination)
+    #     state_vec.append(deviation_angle)
+    #     state_vec.append(-deviation_angle)
+        
+    # else:
         # state_vec.append(eucledianDist(agent.rect.center,destination.center) / extra_info['max_distance'])
         #Deviation_angle:
-        deviation_angle = calc_deviation_angle(agent, destination)
-        state_vec.append(deviation_angle)
-        state_vec.append(-deviation_angle)
+    deviation_angle = calc_deviation_angle(agent, destination)
+    state_vec.append(deviation_angle)
+    state_vec.append(-deviation_angle)
     
     return state_vec
 
@@ -219,7 +231,7 @@ def reachedExit(agent_rect):
     return False
 
 # Function to calculate the angle of deviation of the agent wrt the destination
-def calc_deviation_angle(agent, destination = victimsRect):
+def calc_deviation_angle(agent, destination:pygame.Rect):
     pt_1 = list(agent.rect.center)
     pt_2 = list(destination.center)
     # Apply transformation to resemble pts in a real cartesian plane
