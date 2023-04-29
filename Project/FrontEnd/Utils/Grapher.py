@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-def plot_rewards(agents_episode_rewards):
+def plot_rewards(agents_episode_rewards,path:str):
     fig, axes = plt.subplots(2,2,figsize=(10,10))
     col = row = 0
     for (index, episode_rewards) in enumerate(agents_episode_rewards):
@@ -20,13 +20,13 @@ def plot_rewards(agents_episode_rewards):
 
     fig.tight_layout()
     plt.show()
-    fig.savefig("Graphs/episode_rewards.jpg")
+    fig.savefig(f"{path}/episode_rewards.jpg")
 
-def plot_reach_time(time_list,title):
+def plot_reach_time(time_list,title,path:str):
     x = list(range(1,len(time_list)+1))
     plt.plot(x,time_list)
     plt.xlabel('Episode')
     plt.ylabel('Timesteps')
     plt.title(title)
     plt.show()
-    plt.savefig('Graphs/reach_time.jpg')
+    plt.savefig(f'{path}/reach_time.jpg')

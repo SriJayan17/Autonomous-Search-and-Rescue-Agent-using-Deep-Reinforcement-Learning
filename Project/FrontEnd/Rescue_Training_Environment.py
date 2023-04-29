@@ -69,11 +69,7 @@ class TrainingEnvironment:
         self.memory = ReplayBuffer()
         self.agent_episode_reward = [[]]
         
-        # Initialising the agents
-        # Action limit:
-        #    Angle -> Varies from -15 to 15
-        #    Velocity -> Varies from (base_velocity - 2.5 = 5) to (base_velocity + 2.5 = 10)
-
+        
         #This is to store the current state of an individual agent   
         self.state_dict = [None] * len(self.agentModels)
         # This is to store the actual state(combined) that we pass into the neural network
@@ -97,31 +93,25 @@ class TrainingEnvironment:
         self.exit = pygame.image.load("Project/Resources/Images/exit.jpg")
         self.exit = pygame.transform.scale(self.exit,(30, 30))
 
-        # self.check_dir_and_load()
-
-        # self.flock_center = calc_flock_center(self.agentModels)
+        self.check_dirs()
 
     #Preparing the directories required to store the outputs:
-    def check_dir_and_load(self):
+    def check_dirs(self):
         cwd = os.getcwd()
-        if not os.path.exists(os.path.join(cwd,"Rescue_plan/path_trace.pickle")):
-            print('Saved path trace doesn\'t exist')
-            exit(1)
-        with open('Rescue_plan/path_trace.pickle','rb') as infile:
-            self.trace_path = pickle.load(infile)
+        if not os.path.isdir(os.path.join(cwd,"saved_models/rescue_agent")):
+            os.makedirs('saved_models/rescue_agent')
+        if not os.path.isdir(os.path.join(cwd,"Graphs/rescue")):
+            os.makedirs('Graphs/rescue')
+
 
     def stop(self):
         self.stopSimulation = True
     
     def perform_action(self, i, turn_angle,dist):
-        # print(f'Turn angle: {turn_angle}')
         if turn_angle != 0: self.agentModels[i].turn(turn_angle)
         self.agentModels[i].move(self.base_velocity + dist)
         if not isPermissible([self.agentModels[i]]):
             self.agentModels[i].restore_move()
-            # print('Action not permitted!')
-            # agent.turn(-turn_angle)
-            # self.agentRewards[index] = IMPERMISSIBLE_ACTION
             self.action_permit[i] = False
 
 
@@ -134,23 +124,13 @@ class TrainingEnvironment:
         episode_timesteps = 0
         total_timesteps = 0
         random_action_limit = 1000
-        episode_len = 5_000
+        episode_len = 10_000
         expl_noise = [3,5]
         
-        # expl_prob = 0.2
-        # deter_count = 0
-        # timesteps_since_eval = 0
         episode_num = 1
         done = False 
         reached = [False] * len(self.agentModels)
-
-        # Set the agent's initial orientation
-        # target_angle = self.trace_path[-1]
-        # if target_angle <= 180:
-        #     self.agentModel.turn(-target_angle + 90)
-        # else:
-        #     self.agentModel.turn(360 - target_angle + 90)
-        # del self.trace_path[-1]
+        
 
         while not self.stopSimulation:
 
@@ -165,14 +145,10 @@ class TrainingEnvironment:
             for exit in exit_points:
                 environment.blit(self.exit, exit.center)
             
-            # environment.blit(self.victims, (victimsRect.x, victimsRect.y))
-
+            
             for fire in fireFlares:
                 environment.blit(self.fire, (fire.x, fire.y))
             
-            # if len(self.trace_path) != 0:
-            #     self.perform_action(self.agentModel,-self.trace_path[-1],12)
-            #     del self.trace_path[-1]
             
             # An episode is over
             if done:
@@ -195,13 +171,6 @@ class TrainingEnvironment:
                             self.agentModels[i].save_brain(f'./saved_models/rescue_agent')
                         else:
                             self.agentModels[i].rect.center = helper_agents[i-1]
-                    # agent.train(replay_buffer, episode_timesteps, batch_size, discount, tau, policy_noise, noise_clip, policy_freq)
-
-            # We evaluate the episode and we save the policy
-            # if timesteps_since_eval >= eval_freq:
-            #     timesteps_since_eval %= eval_freq
-            #     evaluations.append(evaluate_policy(policy))
-            #     np.save("./results/%s" % (file_name), evaluations)
         
                 # When the training step is done, we reset the state of the environment    
                 environment.blit(self.agentModels[0].shape_copy,self.agentModels[0].rect)    
@@ -274,7 +243,7 @@ class TrainingEnvironment:
 
                 if event.type == pygame.QUIT:  
                     if episode_num >= 3:
-                        plot_rewards(self.agent_episode_reward)
+                        plot_rewards(self.agent_episode_reward,'Graphs/rescue')
                         # plot_reach_time()
                         
                     self.stop()

@@ -45,7 +45,6 @@ class TrainingEnvironment:
         # Initialising the agents
         # Action limit:
         #    Angle -> Varies from -15 to 15
-        #    Velocity -> Varies from (base_velocity - 2.5 = 5) to (base_velocity + 2.5 = 10)
         for i in range(self.numberOfAgents):
             self.agentModels.append(Agent(self.state_len,
                                           1,
@@ -94,13 +93,12 @@ class TrainingEnvironment:
     #Preparing the directories required to store the outputs:
     def prepare_dirs(self):
         cwd = os.getcwd()
-        if not os.path.isdir(os.path.join(cwd,"Graphs")):
-            os.makedirs('Graphs')
-        if not os.path.isdir(os.path.join(cwd,"Rescue_plan")):
-            os.makedirs('Rescue_plan')
+        if not os.path.isdir(os.path.join(cwd,"Graphs/search")):
+            os.makedirs('Graphs/search')
         if not os.path.isdir(os.path.join(cwd,"saved_models")):
             for i in range(self.numberOfAgents):
-                os.makedirs(f'saved_models/agent_{i}')
+                if not os.path.isdir(os.path.join(cwd,f'saved_models/agent_{i}')):
+                    os.makedirs(f'saved_models/agent_{i}')
 
     def stop(self):
         self.stopSimulation = True
@@ -127,11 +125,7 @@ class TrainingEnvironment:
         random_action_limit = 500
         episode_len = 5_000
         expl_noise = [3,5]
-        # timesteps_since_eval = 0
-        min_reach_time = episode_len + 1
-        min_reach_travel_history = None
-        reach_path_modified = False
-
+        
         episode_num = 1
         done = False 
         
@@ -151,14 +145,7 @@ class TrainingEnvironment:
                 environment.blit(self.fire, (fire.x, fire.y))
             
             # An episode is over
-            if done:
-                #Check and Save the rescue path:
-                if reach_path_modified:
-                    with open('Rescue_plan/path_trace.pickle','wb') as outfile:
-                        pickle.dump(min_reach_travel_history,outfile)
-                        print('Saved the rescue path')
-                        reach_path_modified = False
-                        
+            if done:        
                 # If we are not at the very beginning, we start the training process of the model
                 if total_timesteps != 0:
                         print(f'Total Timesteps: {total_timesteps} Episode Num: {episode_num}')
@@ -230,14 +217,6 @@ class TrainingEnvironment:
                 reached = reachedVictims(self.agentModels[i].rect)
                     # If reached, check if this is the minimum time taken to reach.
                     # If yes, store the path_trace of that agent to use for rescue
-                if reached and episode_timesteps < min_reach_time:
-                    min_reach_time = episode_timesteps
-                    min_reach_travel_history = deepcopy(self.travel_history[i])
-                    target_angle = (self.agentModels[i].get_proper_angle() + 180) % 360
-                    # Store the target angle as the last value of the trace_back list
-                    min_reach_travel_history.append(target_angle)
-                    reach_path_modified = True
-                    print('New time record achieved!')
                   # Add the record in the common memory:
                 self.memory.add((prev_state,self.state_dict[i],self.action_dict[i],self.agentRewards[i],reached))
                 
@@ -257,9 +236,9 @@ class TrainingEnvironment:
                 if event.type == pygame.QUIT:  
                     if episode_num >= 3:
                         #Plots the rewards obtained by the agents wrt episode
-                        plot_rewards(self.agents_episode_rewards)
+                        plot_rewards(self.agents_episode_rewards,'Graphs/search')
                         # Plots the time taken to reach the victims wrt episodes
-                        plot_reach_time(self.reach_time,'Time taken to reach the victims')
+                        plot_reach_time(self.reach_time,'Time taken to reach the victims','Graphs/search')
                     self.stop()
                 
             #     # Manual Control:
