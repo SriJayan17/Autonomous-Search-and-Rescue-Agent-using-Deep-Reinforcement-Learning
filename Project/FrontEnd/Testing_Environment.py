@@ -140,14 +140,14 @@ class TrainingEnvironment:
             for boundary in boundaries:
                 pygame.draw.rect(environment, (0, 0, 51), boundary)
 
-            for furniture in furnitures:
+            for furniture in objects:
                 environment.blit(furniture[0], furniture[1])
-
-            for desk in desks:
-                environment.blit(desk[0], desk[1])
 
             for obstacle in walls:
                 pygame.draw.rect(environment,(0, 0, 51), obstacle)
+            
+            # for rect in objects_rect:
+            #     pygame.draw.rect(environment,(0, 0, 255), rect)
             
             environment.blit(self.victims, (test_victimsRect.x,test_victimsRect.y))
 

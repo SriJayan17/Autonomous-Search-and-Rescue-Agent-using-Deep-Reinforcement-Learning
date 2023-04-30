@@ -44,11 +44,7 @@ plant = pygame.transform.scale(plant, (50,50))
 game_table = pygame.image.load("Project/FrontEnd/Images/game_table.png")
 game_table = pygame.transform.scale(game_table, (150,100))
 
-desks = [
-    (desk_rotated, (280, 280)),
-    (desk, (1080, 280))
-]
-furnitures = [
+objects = [
     (furniture_sofa, (60,230)),
     (furniture_sofa_rotated, (60,380)),
     (furniture_sofa, (1250,230)),
@@ -57,6 +53,8 @@ furnitures = [
     (furniture_table, (300,40)),
     (furniture_table, (60,550)),
     (furniture_table, (300,550)),
+    (desk_rotated, (280, 280)),
+    (desk, (1080, 280)),
     (beam_bag, (550,150)),
     (beam_bag, (820,150)),
     (conference_table, (1150,40)),
@@ -68,6 +66,13 @@ furnitures = [
     (plant, (630,660)),
     (plant, (780,660))
 ]
+objects_rect = []
+
+for object in objects:
+    rect = object[0].get_rect()
+    rect.left = object[1][0]
+    rect.top = object[1][1]
+    objects_rect.append(rect)
 
 walls = (
     pygame.Rect(80,200,370,20), 
