@@ -2,6 +2,7 @@ import math
 import numpy as np
 from tkinter import *
 
+from Project.FrontEnd.Utils.Testing_Env_Obstacles import *
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
 from Project.FrontEnd.Utils.Training_Env_Obstacles import height,width
 from Project.FrontEnd.Utils.Rewards import *
@@ -17,15 +18,20 @@ def isColliding(objects, rect):
 
 # To check if a particular move causes an agent to collide with borders, obstacles, boundaries,
 # or other agents
-def isPermissible(agent_list=[], index=0, include_borders = True):
-    objects = [boundaries, obstacles]
+def isPermissible(agent_list=[], index=0, include_borders = True, testing = False):
+    if testing:
+        # Including the obstacles specific to the Testng_Environment
+        objects = [walls,boundaries]
+    else:
+        # Including the obstacles specific to the Traning_Environment
+        objects = [boundaries, obstacles]
 
     if include_borders:
         objects.append(borders)
     
     objects.append((agent_list[i].rect for i in range(len(agent_list)) if i != index))
     current_rect = agent_list[index].rect
-    current_rect_center = current_rect.center
+    # current_rect_center = current_rect.center
 
     #Checking if the agent has collided with an obstacle
     for object in objects:
@@ -81,7 +87,7 @@ def generateReward(previous_center, current_rect, rescue_op=False, nearest_exit:
     reward = IMPERMISSIBLE_ACTION
 
     # Highly positive reward if the agent has reached the target:
-    if reachedVictims(current_rect):
+    if reachedDestination(current_rect):
         return REACHED_VICTIMS
 
     # Positive reward if the agent has moved towards the target
@@ -178,19 +184,24 @@ def get_sensors(target_player:Agent,target_grid,dim,boundary):
     return result
 
 # Generate state for an individual agent
-def get_state(agent,extra_info, destination = victimsRect):
+def get_state(agent, extra_info, testing=False):
     """
     For search training, state_len = 8
     For rescue training, state_len = 8 
     """
+    destination = test_victimsRect if testing else victimsRect
     state_vec = []
 
     # add obstacle_density
-    state_vec.extend(get_sensors(agent,obstacleGrid,extra_info['intensity_area_dim'],
+    state_vec.extend(get_sensors(agent,
+                                test_obstacleGrid if testing else obstacleGrid,
+                                extra_info['intensity_area_dim'],
                                 row-height))
     
     # add heat_intensity
-    state_vec.extend(get_sensors(agent,fireGrid,extra_info['intensity_area_dim'],
+    state_vec.extend(get_sensors(agent,
+                                 test_fireGrid if testing else fireGrid,
+                                 extra_info['intensity_area_dim'],
                                  row-height))
     #Distance between agent and target:
     # print(type(destination))
@@ -219,8 +230,8 @@ def get_state(agent,extra_info, destination = victimsRect):
     
     return state_vec
 
-def reachedVictims(agent_rect):
-    return victimsRect.colliderect(agent_rect)
+def reachedDestination(agent_rect,destination:pygame.Rect):
+    return destination.colliderect(agent_rect)
 
 def reachedExit(agent_rect):
     for exit in exit_points:

@@ -28,5 +28,6 @@ def plot_reach_time(time_list,title,path:str):
     plt.xlabel('Episode')
     plt.ylabel('Timesteps')
     plt.title(title)
+    fig = plt.gcf()
     plt.show()
-    plt.savefig(f'{path}/reach_time.jpg')
+    fig.savefig(f'{path}/reach_time.jpg')

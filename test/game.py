@@ -4,7 +4,7 @@ from math import sin,cos
 
 from Project.Backend.Agent import Agent
 from Project.FrontEnd.Utils.Action_Handler import get_sensors
-from Project.FrontEnd.Utils.Training_Env_Obstacles import obstacleGrid
+from Project.FrontEnd.Utils.Training_Env_Obstacles import test_obstacleGrid
 
 pygame.init()
 pygame.display.set_caption("Search and Rescue Simulation")
@@ -62,7 +62,7 @@ while not stopSimulation:
 
     # # Manual Control
     environment.blit(agent.shape_copy,agent.rect)
-    _,sensor_pts = get_sensors(agent,obstacleGrid,10,30)
+    _,sensor_pts = get_sensors(agent,test_obstacleGrid,10,30)
     for pt in sensor_pts:
         pygame.draw.circle(environment,(255,0,0),pt,10)
     # if(reachedVictims(self.agentModels[0])):

@@ -214,7 +214,7 @@ class TrainingEnvironment:
                   # Update the state in both the cases (Move permitted/not), because the orientation of the rectange might have changed:
                 self.state_dict[i] = get_state(self.agentModels[i],self.state_extra_info)
                   # Checking if the agent has reached
-                reached = reachedVictims(self.agentModels[i].rect)
+                reached = reachedDestination(self.agentModels[i].rect,destination=victimsRect)
                     # If reached, check if this is the minimum time taken to reach.
                     # If yes, store the path_trace of that agent to use for rescue
                   # Add the record in the common memory:

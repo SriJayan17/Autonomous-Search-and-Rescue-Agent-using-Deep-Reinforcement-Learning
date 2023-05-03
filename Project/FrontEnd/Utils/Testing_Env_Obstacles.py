@@ -140,8 +140,8 @@ agents = (
 )
 test_victimsRect = pygame.Rect(705,290,50,50)
 
-obstacleGrid = np.zeros((row,cols))
-fireGrid = np.zeros((row,cols))
+test_obstacleGrid = np.zeros((row,cols))
+test_fireGrid = np.zeros((row,cols))
 
 helper_agents = (
     (400,(height)/2),
@@ -151,30 +151,34 @@ helper_agents = (
 
 
 # Making the borders opaque
-obstacleGrid[:30,:] = 1
-obstacleGrid[row-30:,:] = 1
-obstacleGrid[30:row-30,:30] = 1
-obstacleGrid[30:row-30,cols-30:] = 1
+test_obstacleGrid[:30,:] = 1
+test_obstacleGrid[row-30:,:] = 1
+test_obstacleGrid[30:row-30,:30] = 1
+test_obstacleGrid[30:row-30,cols-30:] = 1
 
 # Making the obstacles opaque
 for obstacle in walls:
-    opaque_obstacle(obstacle,obstacleGrid,row-height)
+    opaque_obstacle(obstacle,test_obstacleGrid,row-height)
 
 #Making the boundaries opaque:
 for boundary in boundaries:
-    opaque_obstacle(boundary,obstacleGrid,row-height)
+    opaque_obstacle(boundary,test_obstacleGrid,row-height)
+
+# Making the objects opaque:
+# for obj in objects_rect:
+#     opaque_obstacle(obj,test_obstacleGrid,row-height)
 
 # Marking the fire in fireGrid
 for fire in test_fireFlares:
-    opaque_obstacle(fire,fireGrid,row-height)
+    opaque_obstacle(fire,test_fireGrid,row-height)
 
 #Visualising the grid:
 # from PIL import Image
 # import cv2
 # if __name__ == '__main__':
-#     print(obstacleGrid.shape)
+#     print(test_obstacleGrid.shape)
 #     # img = Image.fromarray(obstacleGrid, 'RGB')
 #     # img.save('my.png')
-#     cv2.imshow('image',obstacleGrid)
+#     cv2.imshow('image',test_fireGrid)
 #     cv2.waitKey(0) 
 #     cv2.destroyAllWindows()
