@@ -109,11 +109,11 @@ boundaries = (
     pygame.Rect((width-40)/2+50,height-20,(width-40)/2+50,20),
 )
 
-exit_points = (
-    pygame.Rect((width-40)/2-50-15,0,100,20),
-    pygame.Rect((width-40)/2-50-15,height-50,100,20),
-    pygame.Rect(0, (height-40)/2-50,20,100),
-    pygame.Rect(width-50, (height-40)/2-50,20,100),
+test_exit_points = (
+    pygame.Rect((width-40)/2-50-15,0,50,50),
+    pygame.Rect((width-40)/2-50-15,height-50,50,50),
+    pygame.Rect(0, (height-40)/2-50,50,50),
+    pygame.Rect(width-50, (height-40)/2-50,50,50),
 )
 
 borders = (

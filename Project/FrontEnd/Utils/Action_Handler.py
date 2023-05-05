@@ -87,7 +87,7 @@ def generateReward(previous_center, current_rect, rescue_op=False, nearest_exit:
     reward = IMPERMISSIBLE_ACTION
 
     # Highly positive reward if the agent has reached the target:
-    if reachedDestination(current_rect):
+    if reachedDestination(current_rect,destination=nearest_exit):
         return REACHED_VICTIMS
 
     # Positive reward if the agent has moved towards the target
@@ -184,12 +184,12 @@ def get_sensors(target_player:Agent,target_grid,dim,boundary):
     return result
 
 # Generate state for an individual agent
-def get_state(agent, extra_info, testing=False):
+def get_state(agent, extra_info, destination:pygame.Rect,testing=False):
     """
     For search training, state_len = 8
     For rescue training, state_len = 8 
     """
-    destination = test_victimsRect if testing else victimsRect
+    # destination = test_victimsRect if testing else victimsRect
     state_vec = []
 
     # add obstacle_density
