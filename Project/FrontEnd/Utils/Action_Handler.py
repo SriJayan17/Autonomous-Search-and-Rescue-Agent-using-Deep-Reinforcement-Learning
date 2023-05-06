@@ -21,7 +21,7 @@ def isColliding(objects, rect):
 def isPermissible(agent_list=[], index=0, include_borders = True, testing = False):
     if testing:
         # Including the obstacles specific to the Testng_Environment
-        objects = [walls,boundaries]
+        objects = [walls,boundaries,tuple(objects_rect)]
     else:
         # Including the obstacles specific to the Traning_Environment
         objects = [boundaries, obstacles]
@@ -89,6 +89,10 @@ def generateReward(previous_center, current_rect, rescue_op=False, nearest_exit:
     # Highly positive reward if the agent has reached the target:
     if reachedDestination(current_rect,destination=nearest_exit):
         return REACHED_VICTIMS
+    elif rescue_op:
+        for exit_pt in exit_points:
+            if reachedDestination(current_rect,destination=exit_pt):
+                return REACHED_VICTIMS - 1
 
     # Positive reward if the agent has moved towards the target
     if previous_target_dist > current_target_dist:

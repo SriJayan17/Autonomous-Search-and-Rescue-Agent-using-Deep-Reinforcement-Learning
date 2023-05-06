@@ -188,7 +188,7 @@ class TestingEnvironment:
                     action = self.agentModels[i].take_action(state)
 
                     if self.cooldown[i] > 0:
-                        self.perform_action(i, -20 if action[0] > 0 else 20, -self.base_velocity)
+                        self.perform_action(i, -45 if action[0] > 0 else 45, -self.base_velocity)
                         self.cooldown[i] -= 1
                     else:
                         self.perform_action(i, action[0], 12)
@@ -205,7 +205,7 @@ class TestingEnvironment:
                 state = get_state(self.agentModels[reached_agent],self.state_extra_info,testing=True,destination=target_exit)
                 action = self.agentModels[reached_agent].take_action(state)
                 if self.cooldown[reached_agent] > 0:
-                    self.perform_action(reached_agent, -20 if action[0] > 0 else 20, -self.base_velocity, rescue_op=True)
+                    self.perform_action(reached_agent, -45 if action[0] > 0 else 45, -self.base_velocity, rescue_op=True)
                     self.cooldown[reached_agent] -= 1
                 else:
                     self.perform_action(reached_agent, action[0], 12, rescue_op=True)

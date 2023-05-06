@@ -91,7 +91,7 @@ class TrainingEnvironment:
         self.fire = pygame.transform.scale(self.fire,(fireFlares[0].width,fireFlares[0].height))
 
         self.exit = pygame.image.load("Project/Resources/Images/exit.jpg")
-        self.exit = pygame.transform.scale(self.exit,(30, 30))
+        self.exit = pygame.transform.scale(self.exit,(50, 30))
 
         self.check_dirs()
 

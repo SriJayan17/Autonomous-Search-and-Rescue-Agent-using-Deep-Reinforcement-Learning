@@ -33,13 +33,13 @@ furniture_table = pygame.transform.scale(furniture_table, (160,120))
 furniture_table_rotated = pygame.transform.rotate(furniture_table, 180)
 
 beam_bag = pygame.image.load("Project/FrontEnd/Images/beam_bag.png")
-beam_bag = pygame.transform.scale(beam_bag, (100,100))
+beam_bag = pygame.transform.scale(beam_bag, (80,80))
 
 conference_table = pygame.image.load("Project/FrontEnd/Images/conference_table.png")
 conference_table = pygame.transform.scale(conference_table, (200,100))
 
 plant = pygame.image.load("Project/FrontEnd/Images/plant.png")
-plant = pygame.transform.scale(plant, (50,50))
+plant = pygame.transform.scale(plant, (40,40))
 
 game_table = pygame.image.load("Project/FrontEnd/Images/game_table.png")
 game_table = pygame.transform.scale(game_table, (150,100))
@@ -57,12 +57,16 @@ objects = [
     (desk, (1080, 280)),
     (beam_bag, (550,150)),
     (beam_bag, (820,150)),
+    # (beam_bag, (640,150)),
+    # (beam_bag, (750,150)),
     (conference_table, (1150,40)),
     (conference_table, (1150,570)),
     (game_table, (520,450)),
     (game_table, (800,450)),
-    (plant, (630,30)),
-    (plant, (780,30)),
+    # (plant, (630,30)),
+    # (plant, (780,30)),
+    (plant, (570,60)),
+    (plant, (840,60)),
     (plant, (630,660)),
     (plant, (780,660))
 ]
@@ -165,8 +169,8 @@ for boundary in boundaries:
     opaque_obstacle(boundary,test_obstacleGrid,row-height)
 
 # Making the objects opaque:
-# for obj in objects_rect:
-#     opaque_obstacle(obj,test_obstacleGrid,row-height)
+for obj in objects_rect:
+    opaque_obstacle(obj,test_obstacleGrid,row-height)
 
 # Marking the fire in fireGrid
 for fire in test_fireFlares:
