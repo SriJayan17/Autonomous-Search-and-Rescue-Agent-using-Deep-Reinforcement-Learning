@@ -1,5 +1,5 @@
 import sys
-# sys.path.append("e:/AI_projects/RescueAI/")
+sys.path.append("e:/AI_projects/RescueAI/")
 
 import pygame
 import os

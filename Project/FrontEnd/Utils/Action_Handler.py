@@ -1,6 +1,7 @@
 import math
 import numpy as np
 from tkinter import *
+from tkinter import ttk
 
 from Project.FrontEnd.Utils.Testing_Env_Obstacles import *
 from Project.FrontEnd.Utils.Training_Env_Obstacles import *
@@ -311,13 +312,16 @@ def stopSimulation(root, stop, episode):
 
 def displaySwitch(text, stop, episode):
     root = Tk()
+    # print(style.theme_names())
     root.withdraw()
     popup = Toplevel()
+    style = ttk.Style(popup)
+    style.theme_use('winnative')
     popup.title("Prompt")
     popup.geometry("250x150+655+300")
     message = Label(popup, text=text)
-    continue_button = Button(popup, text="continue", command=lambda:continueToNextEpisode(root), borderwidth=10)
-    stop_button = Button(popup, text="stop", command=lambda: stopSimulation(root, stop, episode), borderwidth=10)
+    continue_button = ttk.Button(popup, text="continue", command=lambda:continueToNextEpisode(root))
+    stop_button = ttk.Button(popup, text="stop", command=lambda: stopSimulation(root, stop, episode))
     message.pack(side=TOP)
     continue_button.pack(side=LEFT)
     stop_button.pack(side=RIGHT)
