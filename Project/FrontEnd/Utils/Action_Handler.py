@@ -55,9 +55,7 @@ def generateRescueReward(previous_center, current_rect):
             prev_min_dist = prev_dist
             prev_target = exit_pt
     current_dist = eucledianDist(current_center, prev_target)
-        # if current_dist < current_min_dist: current_min_dist = current_dist
     if prev_min_dist > current_dist:
-        # print(f'prev_min: {prev_min_dist}, current_dist: {current_dist}')
         reward = TOWARDS_DESTINATION
     else:
         reward = AWAY_FROM_DESTINATION
@@ -138,7 +136,6 @@ def get_sensors(target_player:Agent,target_grid,dim,boundary):
         target_angle = (target_player.angle + 40) % 360
     else:
         target_angle = target_player.angle + 40
-    # dist = height/2 + 5(extra)
     # Angle modificatin prior to movement is done within the function
     move_pt(pt,target_angle,35)
     # pt_tray.append(pt)
@@ -166,7 +163,6 @@ def get_state(agent, extra_info, destination:pygame.Rect,testing=False):
     For search training, state_len = 8
     For rescue training, state_len = 8 
     """
-    # destination = test_victimsRect if testing else victimsRect
     state_vec = []
 
     # add obstacle_density
@@ -275,7 +271,3 @@ def displaySwitch(text, stop, episode):
     continue_button.pack(side=LEFT)
     stop_button.pack(side=RIGHT)
     popup.mainloop()
-# if __name__ == '__main__':
-#     vec_1 = [-34,54]
-#     vec_2 = [1,0]
-#     print(angle_between_vectors(vec_1,vec_2))
