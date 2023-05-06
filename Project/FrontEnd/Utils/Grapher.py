@@ -1,7 +1,12 @@
 import matplotlib.pyplot as plt
 
 def plot_rewards(agents_episode_rewards,path:str):
-    fig, axes = plt.subplots(2,2,figsize=(10,10))
+    n = len(agents_episode_rewards)
+    if n == 4:
+        fig, axes = plt.subplots(2,2,figsize=(10,10))
+    elif n == 8:
+        fig, axes = plt.subplots(2,4,figsize=(6,6))
+
     col = row = 0
     for (index, episode_rewards) in enumerate(agents_episode_rewards):
         x = []
@@ -14,7 +19,10 @@ def plot_rewards(agents_episode_rewards,path:str):
         axes[row,col].set(title=f'Agent {index+1}',xlabel='Episode number', ylabel='Reward')
         
         col += 1
-        if col == 2:
+        if n == 4 and col == 2:
+            row += 1
+            col = 0
+        elif n == 8 and col == 5:
             row += 1
             col = 0
 

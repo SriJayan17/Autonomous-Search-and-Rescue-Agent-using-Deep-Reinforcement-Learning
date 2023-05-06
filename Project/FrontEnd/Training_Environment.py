@@ -25,7 +25,7 @@ class TrainingEnvironment:
         self.height = 750
         self.width = 1500
 
-        self.numberOfAgents = 4
+        self.numberOfAgents = 8
         self.state_len = 8
         self.agentModels = []
 
@@ -67,6 +67,8 @@ class TrainingEnvironment:
         # This is to check whether the current action was permitted or not:
         self.action_permit = [True] * self.numberOfAgents
 
+        self.is_active = [True] * self.numberOfAgents
+
         self.agentRewards = [0] * self.numberOfAgents
         self.episode_rewards = [0] * self.numberOfAgents
 
@@ -87,10 +89,10 @@ class TrainingEnvironment:
         cwd = os.getcwd()
         if not os.path.isdir(os.path.join(cwd,"Graphs/search")):
             os.makedirs('Graphs/search')
-        if not os.path.isdir(os.path.join(cwd,"saved_models")):
-            for i in range(self.numberOfAgents):
-                if not os.path.isdir(os.path.join(cwd,f'saved_models/agent_{i}')):
-                    os.makedirs(f'saved_models/agent_{i}')
+        # if not os.path.isdir(os.path.join(cwd,"saved_models")):
+        for i in range(self.numberOfAgents):
+            if not os.path.isdir(os.path.join(cwd,f'saved_models/agent_{i}')):
+                os.makedirs(f'saved_models/agent_{i}')
 
     def stop(self):
         self.stopSimulation = True
@@ -111,7 +113,7 @@ class TrainingEnvironment:
 
         episode_timesteps = 0
         total_timesteps = 0
-        random_action_limit = 500
+        random_action_limit = 1000
         episode_len = 5_000
         expl_noise = [3,5]
         
@@ -151,11 +153,10 @@ class TrainingEnvironment:
                             self.agentModels[i].save_brain(f'./saved_models/agent_{i}')
                 # When the training step is done, we reset the state of the environment as well as the travel history 
                 for i in range(self.numberOfAgents):
+                    self.is_active[i] = True
                     self.agentModels[i].rect.center = agents[i]
                     environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)
 
-                    self.travel_history[i].clear()    
-        
                 # Set the Done to False
                 done = False
                 
@@ -174,15 +175,20 @@ class TrainingEnvironment:
                 # Take random action in the initial 10,000 timesteps
                 if total_timesteps < random_action_limit:
                     action = self.agentModels[i].take_random_action()
-                else:
+                elif self.is_active[i]:
                     action = self.agentModels[i].take_action(self.state_dict[i])
 
                     if expl_noise is not None: # Adding noise to the predicted action
                         action = (action + random.uniform(expl_noise[0], expl_noise[1])).clip(-15,15) # Clipping the final action between the permissible range of values
+                else:
+                    # The agent has hit an obstacle and is thus been removed from the env
+                    continue
                 self.perform_action(self.agentModels, i, action[0], 12)
                 self.action_dict[i] = action
                 
                 if not self.action_permit[i]: # Action not permitted
+                    if total_timesteps >= random_action_limit:
+                        self.is_active[i] = False
                     self.agentRewards[i] = IMPERMISSIBLE_ACTION
                     self.action_permit[i] = True
                 else: #Action was permitted
@@ -208,7 +214,8 @@ class TrainingEnvironment:
 
             # An episode is done if the timelimit has been reached or if any of the agents
             # has reached the target    
-            done = done or any(if_reached)
+            # print(not any(self.is_active))
+            done = done or any(if_reached) or (not any(self.is_active))
                    
             episode_timesteps += 1
             total_timesteps += 1
@@ -245,7 +252,7 @@ class TrainingEnvironment:
             
             if total_timesteps % 1000 == 0: print(f'Timsesteps: {total_timesteps}')
             pygame.display.flip()
-            # pygame.time.delay(10)
+            pygame.time.delay(50)
 
 
 obj = TrainingEnvironment()
