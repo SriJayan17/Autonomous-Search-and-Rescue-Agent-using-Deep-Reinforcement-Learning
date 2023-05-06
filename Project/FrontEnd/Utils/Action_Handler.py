@@ -298,6 +298,30 @@ def displayPrompt(prompt):
     root.after(1000,lambda:root.destroy())
     popup.mainloop()
 
+def continueToNextEpisode(root):
+    root.destroy()
+    print("cont")
+    return
+
+def stopSimulation(root, stop, episode):
+    print("stop")
+    root.destroy()
+    stop(episode)
+    return
+
+def displaySwitch(text, stop, episode):
+    root = Tk()
+    root.withdraw()
+    popup = Toplevel()
+    popup.title("Prompt")
+    popup.geometry("250x150+655+300")
+    message = Label(popup, text=text)
+    continue_button = Button(popup, text="continue", command=lambda:continueToNextEpisode(root), borderwidth=10)
+    stop_button = Button(popup, text="stop", command=lambda: stopSimulation(root, stop, episode), borderwidth=10)
+    message.pack(side=TOP)
+    continue_button.pack(side=LEFT)
+    stop_button.pack(side=RIGHT)
+    popup.mainloop()
 # if __name__ == '__main__':
 #     vec_1 = [-34,54]
 #     vec_2 = [1,0]

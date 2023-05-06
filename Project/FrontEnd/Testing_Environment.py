@@ -1,5 +1,5 @@
 import sys
-sys.path.append("e:/AI_projects/RescueAI/")
+# sys.path.append("e:/AI_projects/RescueAI/")
 
 import pygame
 import os
@@ -68,7 +68,7 @@ class TestingEnvironment:
         self.fire3 = pygame.transform.scale(self.fire3,(fireFlares[0].width,fireFlares[0].height))        
 
         self.exit = pygame.image.load("Project/Resources/Images/exit.jpg")
-        self.exit = pygame.transform.scale(self.exit,(50, 30))
+        self.exit = pygame.transform.scale(self.exit,(100, 40))
 
         self.agentIcon = pygame.image.load("Project/Resources/Images/agent.png")
         self.agentIcon = pygame.transform.scale(self.agentIcon,(12, 30))
@@ -83,14 +83,17 @@ class TestingEnvironment:
         if not os.path.isdir(os.path.join(cwd,"Graphs/Test/rescue")):
             os.makedirs('Graphs/Test/rescue')
         
-    def stop(self):
+    def stop(self, episode):
+        if episode >= 3:
+            plot_reach_time(self.search_time_list,'Time taken to reach the victims','Graphs/Test/search')
+            plot_reach_time(self.rescue_time_list,'Time taken to rescue the victims','Graphs/Test/rescue')
         self.stopSimulation = True
     
     def perform_action(self,index:int,turn_angle:float,dist:float,rescue_op:bool=False):
         agent = self.agentModels[index]
         if turn_angle != 0: agent.turn(turn_angle)
         agent.move(self.base_velocity + dist)
-        if not isPermissible(self.agentModels, index, testing=True):
+        if not isPermissible(self.agentModels, index, testing=True, include_borders=not rescue_op):
             agent.restore_move()
             # if rescue_op:
             self.impermissible_action_count[index] += 1
@@ -138,22 +141,20 @@ class TestingEnvironment:
             for obstacle in walls:
                 pygame.draw.rect(environment,(0, 0, 51), obstacle)
             
-            for fire in test_fireFlares:
-                # environment.blit(self.fire3, (fire.x, fire.y))
+            for fire in test_fireFlares:                
                 if total_timesteps % 24 in range(8):
-                    # pygame.draw.rect(environment, (224,224,224,0), pygame.Rect(fire.x,fire.y,45,45))
                     environment.blit(self.fire1, (fire.x, fire.y))
-                elif total_timesteps % 24 in range(8,17):  
-                    # pygame.draw.rect(environment, (224,224,224,0), pygame.Rect(fire.x,fire.y,45,45))                  
+                elif total_timesteps % 24 in range(8,17):                    
                     environment.blit(self.fire2, (fire.x, fire.y))
-                else:    
-                    # pygame.draw.rect(environment, (224,224,224,0), pygame.Rect(fire.x,fire.y,45,45))                
+                else:                    
                     environment.blit(self.fire3, (fire.x, fire.y))
 
             
             # An episode over:
             if reached_agent != -1 and rescued_victims:        
                 if total_timesteps != 0:
+                        text = f"Timesteps taken for search operation: {search_time}\nTimesteps taken for rescue operation: {rescue_time}\nEpisode Number: {episode_num}"
+                        displaySwitch(text,self.stop, episode_num)
                         self.search_time_list.append(search_time)
                         self.rescue_time_list.append(rescue_time)
                         print(f'Timesteps taken for search operation: {search_time}')
@@ -177,7 +178,8 @@ class TestingEnvironment:
                 environment.blit(self.victims, (test_victimsRect.x,test_victimsRect.y))
             else:
                 for exit in exit_points:
-                    environment.blit(self.exit, exit.center)
+                    # pygame.draw.rect(environment,(255,0,0),exit)
+                    environment.blit(self.exit, (exit.x,exit.y))
 
             # Automated Navigation
             # Search Operation:
@@ -188,7 +190,8 @@ class TestingEnvironment:
                     action = self.agentModels[i].take_action(state)
 
                     if self.cooldown[i] > 0:
-                        self.perform_action(i, -45 if action[0] > 0 else 45, -self.base_velocity)
+                        self.perform_action(i, -action[0], -7)
+                        # self.perform_action(i, -45 if action[0] > 0 else 45, -self.base_velocity)
                         self.cooldown[i] -= 1
                     else:
                         self.perform_action(i, action[0], 12)
@@ -205,7 +208,8 @@ class TestingEnvironment:
                 state = get_state(self.agentModels[reached_agent],self.state_extra_info,testing=True,destination=target_exit)
                 action = self.agentModels[reached_agent].take_action(state)
                 if self.cooldown[reached_agent] > 0:
-                    self.perform_action(reached_agent, -45 if action[0] > 0 else 45, -self.base_velocity, rescue_op=True)
+                    self.perform_action(i, -action[0], -7)
+                    # self.perform_action(reached_agent, -45 if action[0] > 0 else 45, -self.base_velocity, rescue_op=True)
                     self.cooldown[reached_agent] -= 1
                 else:
                     self.perform_action(reached_agent, action[0], 12, rescue_op=True)
@@ -222,13 +226,13 @@ class TestingEnvironment:
             for event in pygame.event.get():  
 
                 if event.type == pygame.QUIT:  
-                    if episode_num >= 3:
+                    # if episode_num >= 3:
                         #Plots the rewards obtained by the agents wrt episode
                         # plot_rewards(self.agents_episode_rewards,'Graphs/search')
                         # Plots the time taken to reach the victims wrt episodes
-                        plot_reach_time(self.search_time_list,'Time taken to reach the victims','Graphs/Test/search')
-                        plot_reach_time(self.rescue_time_list,'Time taken to rescue the victims','Graphs/Test/rescue')
-                    self.stop()
+                        # plot_reach_time(self.search_time_list,'Time taken to reach the victims','Graphs/Test/search')
+                        # plot_reach_time(self.rescue_time_list,'Time taken to rescue the victims','Graphs/Test/rescue')
+                    self.stop(episode=episode_num)
                 
                 # Manual Control:
                 if event.type == pygame.KEYDOWN:

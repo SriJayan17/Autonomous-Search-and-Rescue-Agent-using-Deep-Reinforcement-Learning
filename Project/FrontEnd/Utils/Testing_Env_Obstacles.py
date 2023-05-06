@@ -73,7 +73,10 @@ objects = [
 objects_rect = []
 
 for object in objects:
-    rect = object[0].get_rect()
+    rect_copy = object[0]
+    rect_copy = pygame.transform.scale(rect_copy, (rect_copy.get_rect().width*0.75, rect_copy.get_rect().height*0.85))
+    rect = rect_copy.get_rect()
+    # rect = object[0].get_rect()
     rect.left = object[1][0]
     rect.top = object[1][1]
     objects_rect.append(rect)
