@@ -95,13 +95,11 @@ class TestingEnvironment:
         agent.move(self.base_velocity + dist)
         if not isPermissible(self.agentModels, index, testing=True, include_borders=not rescue_op):
             agent.restore_move()
-            # if rescue_op:
             self.impermissible_action_count[index] += 1
             if self.impermissible_action_count[index] == self.impermissible_action_threshold:
                 self.cooldown[index] = self.impermissible_action_count[index]
                 self.impermissible_action_count[index] = 0 
             self.action_permit[index] = False
-        # elif rescue_op:
         else:
             self.impermissible_action_count[index] = 0
 
@@ -178,7 +176,6 @@ class TestingEnvironment:
                 environment.blit(self.victims, (test_victimsRect.x,test_victimsRect.y))
             else:
                 for exit in exit_points:
-                    # pygame.draw.rect(environment,(255,0,0),exit)
                     environment.blit(self.exit, (exit.x,exit.y))
 
             # Automated Navigation
@@ -216,7 +213,6 @@ class TestingEnvironment:
                 if not self.action_permit[reached_agent]:
                     self.action_permit[reached_agent] = True
                 else:
-                    # TODO: There's something wrong with this, check it!
                     rescued_victims = reachedDestination(self.agentModels[reached_agent].rect,destination=target_exit)
                     if rescued_victims: 
                         print('Reached the exit!')
@@ -226,12 +222,6 @@ class TestingEnvironment:
             for event in pygame.event.get():  
 
                 if event.type == pygame.QUIT:  
-                    # if episode_num >= 3:
-                        #Plots the rewards obtained by the agents wrt episode
-                        # plot_rewards(self.agents_episode_rewards,'Graphs/search')
-                        # Plots the time taken to reach the victims wrt episodes
-                        # plot_reach_time(self.search_time_list,'Time taken to reach the victims','Graphs/Test/search')
-                        # plot_reach_time(self.rescue_time_list,'Time taken to rescue the victims','Graphs/Test/rescue')
                     self.stop(episode=episode_num)
                 
                 # Manual Control:
@@ -239,22 +229,13 @@ class TestingEnvironment:
                     
                     if event.key == pygame.K_UP:
                         self.perform_action(reached_agent, 0, 12)
-                        # get_state(self.agentModels[reached_agent],self.state_extra_info)
-
+                
                     if event.key == pygame.K_LEFT:
                         self.perform_action(reached_agent, -45, 0)
-                        # get_state(self.agentModels[0],self.state_extra_info)
-
+                
                     if event.key == pygame.K_RIGHT:
                         self.perform_action(reached_agent, 45, 0)
-                        # get_state(self.agentModels[0],self.state_extra_info)
-            
-            # # # Manual Control
-            # environment.blit(self.agentModels[0].shape_copy,self.agentModels[0].rect)
-            # if(reachedVictims(self.agentModels[0])):
-            #     self.stop()
-            
-            # if total_timesteps % 1000 == 0: print(f'Timsesteps: {total_timesteps}')
+                
             total_timesteps += 1
             pygame.display.flip()
             pygame.time.delay(10)

@@ -8,11 +8,11 @@ from Project.FrontEnd.Utils.Training_Env_Obstacles import *
 from Project.FrontEnd.Utils.Training_Env_Obstacles import height,width
 from Project.FrontEnd.Utils.Rewards import *
 from Project.Backend.Agent import Agent
+
 #To check if two rectangles are colliding
 def isColliding(objects, rect):
     for object in objects:
         if object.colliderect(rect):
-            # print("collision")
             return True
     
     return False
@@ -32,17 +32,11 @@ def isPermissible(agent_list=[], index=0, include_borders = True, testing = Fals
     
     objects.append((agent_list[i].rect for i in range(len(agent_list)) if i != index))
     current_rect = agent_list[index].rect
-    # current_rect_center = current_rect.center
 
     #Checking if the agent has collided with an obstacle
     for object in objects:
         if(isColliding(object, current_rect)):
             return False
-
-    # Checking if the agent has hit the borders    
-    # if (current_rect_center[0] < 0 or current_rect_center[0] > width) or \
-    #    (current_rect_center[1] < 0 or current_rect_center[1] > height):
-    #     return False
     
     return True
 
@@ -123,28 +117,6 @@ def calc_flock_center(agent_list):
     y = sum([agent.rect.centery for agent in agent_list])
     return (x/n, y/n)
 
-# Generating the agent state that is has to be fed into the neural network to make decisions
-# State = own_state + neighbor_state + flock_center (precise)
-# TODO: Add a switch to toggle between training scenario and testing scenario
-# def prepare_agent_state(agent_list,target_index,state_dict,
-#                         initial_state_dict,flock_center=None,vicinity_radius=600):
-#     result = []
-#     n = len(agent_list)
-#     for i in range(n):
-#         if i == target_index:
-#             result.extend(state_dict[i])
-#         else:
-#             target_agent = agent_list[target_index]
-#             distance = eucledianDist((target_agent.rect.x, target_agent.rect.y),
-#                                      (agent_list[i].rect.x,agent_list[i].rect.y))
-#             if distance <= vicinity_radius:
-#                 result.extend(state_dict[i])
-#             else:
-#                 result.extend(initial_state_dict[i])
-
-#     # Adding the flock center
-#     if flock_center is not None: result.extend(flock_center)
-#     return result
 
 def move_pt(target_pt:list,angle,dist):
     angle += 90
@@ -208,27 +180,7 @@ def get_state(agent, extra_info, destination:pygame.Rect,testing=False):
                                  test_fireGrid if testing else fireGrid,
                                  extra_info['intensity_area_dim'],
                                  row-height))
-    #Distance between agent and target:
-    # print(type(destination))
-    # if type(destination) is tuple:
-    #     # distances = []
-    #     min_dist = 1e6
-    #     target_destination = None
-    #     deviations = []
-    #     for item in destination:
-    #         dist = eucledianDist(agent.rect.center,item.center)
-    #         if dist < min_dist:
-    #             min_dist = dist
-    #             target_destination = item
-        
-
-    #     deviation_angle = calc_deviation_angle(agent, target_destination)
-    #     state_vec.append(deviation_angle)
-    #     state_vec.append(-deviation_angle)
-        
-    # else:
-        # state_vec.append(eucledianDist(agent.rect.center,destination.center) / extra_info['max_distance'])
-        #Deviation_angle:
+    
     deviation_angle = calc_deviation_angle(agent, destination)
     state_vec.append(deviation_angle)
     state_vec.append(-deviation_angle)
@@ -271,9 +223,6 @@ def calc_deviation_angle(agent, destination:pygame.Rect):
     else:
         right = orient_angle - dest_vec_angle
         left = 360 - right
-
-    # print(f'From left : {left}')
-    # print(f'From right: {right}')
 
     if right < left : return right/180
     else: return -(left/180)

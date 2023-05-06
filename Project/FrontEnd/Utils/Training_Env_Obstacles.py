@@ -84,18 +84,10 @@ borders = (
 
 # Tuple containing the pair of center points where the agents should be placed initially
 agents = (
-    # (32,(height-40)/2),
-    # (1422,(height-40)/2),
-    # ((width-40)/2-33,30),
-    # ((width-40)/2-33,690)
     (50,(height-40)/2),
     (1440,(height-40)/2),
     ((width-40)/2-15,30),
     ((width-40)/2-15,690),
-    # pygame.Rect(50,(height-40)/2,30,30),
-    # pygame.Rect(1440,(height-40)/2,30,30),
-    # pygame.Rect((width-40)/2-15,30,30,30),
-    # pygame.Rect((width-40)/2-15,690,30,30),
 )
 victimsRect = pygame.Rect(880,230,50,50)
 

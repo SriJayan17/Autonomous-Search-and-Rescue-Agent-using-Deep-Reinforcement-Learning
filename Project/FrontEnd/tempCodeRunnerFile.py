@@ -1,1 +1,0 @@
-00 == 0: print(f'Timsesteps: {total_t

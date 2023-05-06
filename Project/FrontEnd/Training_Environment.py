@@ -59,16 +59,9 @@ class TrainingEnvironment:
         #This is to store the current state of an individual agent   
         self.state_dict = [None] * self.numberOfAgents
         
-        #This is to store the travel record of the agents, to trace back during rescue operation:
-        self.travel_history = [[]] * self.numberOfAgents
-
         for i in range(self.numberOfAgents):
-            self.state_dict[i] = get_state(self.agentModels[i],self.state_extra_info)
-        self.initial_state_dict = deepcopy(self.state_dict)
+            self.state_dict[i] = get_state(self.agentModels[i],self.state_extra_info,destination=victimsRect)
         
-        # for i in range(self.numberOfAgents):
-        #     self.actual_state_dict[i] = prepare_agent_state(self.agentModels,i,self.state_dict,self.state_dict)  
-
         # This is to store the actions taken by the agents:
         self.action_dict = [None] * self.numberOfAgents
         # This is to check whether the current action was permitted or not:
@@ -88,8 +81,7 @@ class TrainingEnvironment:
 
         self.prepare_dirs()
 
-        # self.flock_center = calc_flock_center(self.agentModels)
-
+        
     #Preparing the directories required to store the outputs:
     def prepare_dirs(self):
         cwd = os.getcwd()
@@ -109,9 +101,6 @@ class TrainingEnvironment:
         agent.move(self.base_velocity + dist)
         if not isPermissible(agent_list, index):
             agent.restore_move()
-            # print('Action not permitted!')
-            # agent.turn(-turn_angle)
-            # self.agentRewards[index] = IMPERMISSIBLE_ACTION
             self.action_permit[index] = False
 
     def run(self):
@@ -160,14 +149,12 @@ class TrainingEnvironment:
                             print(f'Training Agent_{i}')
                             self.agentModels[i].train(memory=self.memory,iterations=episode_timesteps,batch_size=500)
                             self.agentModels[i].save_brain(f'./saved_models/agent_{i}')
-                        # agent.train(replay_buffer, episode_timesteps, batch_size, discount, tau, policy_noise, noise_clip, policy_freq)
                 # When the training step is done, we reset the state of the environment as well as the travel history 
                 for i in range(self.numberOfAgents):
                     self.agentModels[i].rect.center = agents[i]
                     environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)
 
                     self.travel_history[i].clear()    
-                # obs = env.reset()
         
                 # Set the Done to False
                 done = False
@@ -187,24 +174,19 @@ class TrainingEnvironment:
                 # Take random action in the initial 10,000 timesteps
                 if total_timesteps < random_action_limit:
                     action = self.agentModels[i].take_random_action()
-                    # action = self.getManualAction()
                 else:
                     action = self.agentModels[i].take_action(self.state_dict[i])
 
                     if expl_noise is not None: # Adding noise to the predicted action
                         action = (action + random.uniform(expl_noise[0], expl_noise[1])).clip(-15,15) # Clipping the final action between the permissible range of values
-                # print(action)
                 self.perform_action(self.agentModels, i, action[0], 12)
                 self.action_dict[i] = action
-                # print(f'Action of agent_{i}: {action}')
                 
                 if not self.action_permit[i]: # Action not permitted
                     self.agentRewards[i] = IMPERMISSIBLE_ACTION
                     self.action_permit[i] = True
                 else: #Action was permitted
-                    # Keeping track of the permitted actions alone:
-                    self.travel_history[i].append(action)
-                    self.agentRewards[i] = generateReward(self.agentModels[i].prev_center, self.agentModels[i].rect)                
+                    self.agentRewards[i] = generateReward(self.agentModels[i].prev_center, self.agentModels[i].rect,nearest_exit=victimsRect)                
                 #Adding to the total episode_reward received by a single agent:
                 self.episode_rewards[i] += self.agentRewards[i]
                 
@@ -212,7 +194,7 @@ class TrainingEnvironment:
                 prev_state = self.state_dict[i]
                   # Update the current state of the individual agent
                   # Update the state in both the cases (Move permitted/not), because the orientation of the rectange might have changed:
-                self.state_dict[i] = get_state(self.agentModels[i],self.state_extra_info)
+                self.state_dict[i] = get_state(self.agentModels[i],self.state_extra_info,destination=victimsRect)
                   # Checking if the agent has reached
                 reached = reachedDestination(self.agentModels[i].rect,destination=victimsRect)
                     # If reached, check if this is the minimum time taken to reach.
