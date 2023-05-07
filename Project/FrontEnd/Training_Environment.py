@@ -220,7 +220,7 @@ class TrainingEnvironment:
                         #Plots the rewards obtained by the agents wrt episode
                         plot_rewards(self.agents_episode_rewards,'Graphs/search')
                         # Plots the time taken to reach the victims wrt episodes
-                        plot_reach_time(self.reach_time,'Time taken to reach the victims','Graphs/search')
+                        plot_reach_time(self.reach_time,'Time taken to reach the victims','Graphs/search','reach_time','Timesteps')
                     self.stop()
                 
             #     # Manual Control:

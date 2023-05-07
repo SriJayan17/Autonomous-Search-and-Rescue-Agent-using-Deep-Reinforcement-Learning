@@ -28,6 +28,9 @@ class TestingEnvironment:
         self.search_time_list = []
         self.rescue_time_list = []
 
+        self.search_fire_time = []
+        self.rescue_fire_time = []
+
         self.base_velocity = 3.0
         self.impermissible_action_count = [0] * self.numberOfAgents
         self.cooldown = [0] * self.numberOfAgents
@@ -85,8 +88,10 @@ class TestingEnvironment:
         
     def stop(self, episode):
         if episode >= 3:
-            plot_reach_time(self.search_time_list,'Time taken to reach the victims','Graphs/Test/search')
-            plot_reach_time(self.rescue_time_list,'Time taken to rescue the victims','Graphs/Test/rescue')
+            plot_reach_time(self.search_time_list,'Time taken to reach the victims','Graphs/Test/search','reach_time','Timseteps')
+            plot_reach_time(self.rescue_time_list,'Time taken to rescue the victims','Graphs/Test/rescue','reach_time','Timesteps')
+            plot_reach_time(self.search_fire_time,'Percentage of fire time during search op','Graphs/Test/search','fire_time','Percentage')
+            plot_reach_time(self.rescue_fire_time,'Percentage of fire time during rescue op','Graphs/Test/rescue','fire_time','Percentage')
         self.stopSimulation = True
     
     def perform_action(self,index:int,turn_angle:float,dist:float,rescue_op:bool=False):
@@ -116,7 +121,9 @@ class TestingEnvironment:
         total_timesteps = 0
         
         episode_num = 1
-        
+        # episode_timesteps = 0
+        fire_timesteps = [0] * self.numberOfAgents
+
         target_exit = exit_points[0]
         # Get the nearest exit:
         min_dist = 1e7
@@ -161,6 +168,7 @@ class TestingEnvironment:
 
                 # Reset the state of the environment as well as the travel history 
                 for i in range(self.numberOfAgents):
+                    fire_timesteps[i] = 0
                     self.agentModels[i].rect.center = agents[i]
                     environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)
                 
@@ -185,6 +193,12 @@ class TestingEnvironment:
                 for i in range(self.numberOfAgents):
                     state = get_state(self.agentModels[i],self.state_extra_info,testing=True,destination=test_victimsRect)
                     action = self.agentModels[i].take_action(state)
+                    
+                    #Checking if the agent has collided with fire
+                    for fire in test_fireFlares:
+                        if fire.colliderect(self.agentModels[i].rect):
+                            fire_timesteps[i] += 1
+                            break
 
                     if self.cooldown[i] > 0:
                         self.perform_action(i, -action[0], -7)
@@ -197,6 +211,8 @@ class TestingEnvironment:
                         self.action_permit[i] = True
                     else: #Action was permitted
                         if reachedDestination(self.agentModels[i].rect,destination=test_victimsRect):
+                            self.search_fire_time.append((fire_timesteps[i]/search_time)*100)
+                            fire_timesteps[i] = 0
                             reached_agent = i
                     environment.blit(self.agentModels[i].shape_copy,self.agentModels[i].rect)
             # Rescue Operation:
@@ -210,11 +226,19 @@ class TestingEnvironment:
                     self.cooldown[reached_agent] -= 1
                 else:
                     self.perform_action(reached_agent, action[0], 12, rescue_op=True)
+                
+                # If the rescue agent hits fire, it is tracked
+                for fire in test_fireFlares:
+                    if fire.colliderect(self.agentModels[reached_agent].rect):
+                        fire_timesteps[reached_agent] += 1
+                        break
+                
                 if not self.action_permit[reached_agent]:
                     self.action_permit[reached_agent] = True
                 else:
                     rescued_victims = reachedDestination(self.agentModels[reached_agent].rect,destination=target_exit)
                     if rescued_victims: 
+                        self.rescue_fire_time.append((fire_timesteps[reached_agent]/rescue_time)*100)
                         print('Reached the exit!')
                         print(f'Agent: {reached_agent}')
                 environment.blit(self.agentModels[reached_agent].shape_copy,self.agentModels[reached_agent].rect)

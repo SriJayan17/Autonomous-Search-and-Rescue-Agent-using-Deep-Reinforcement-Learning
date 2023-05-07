@@ -22,12 +22,12 @@ def plot_rewards(agents_episode_rewards,path:str):
     plt.show()
     fig.savefig(f"{path}/episode_rewards.jpg")
 
-def plot_reach_time(time_list,title,path:str):
+def plot_reach_time(time_list,title,path:str,file_name:str,y_label:str):
     x = list(range(1,len(time_list)+1))
     plt.plot(x,time_list)
     plt.xlabel('Episode')
-    plt.ylabel('Timesteps')
+    plt.ylabel(y_label)
     plt.title(title)
     fig = plt.gcf()
     plt.show()
-    fig.savefig(f'{path}/reach_time.jpg')
+    fig.savefig(f'{path}/{file_name}.jpg')
